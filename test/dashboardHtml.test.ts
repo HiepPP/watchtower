@@ -52,7 +52,7 @@ test("normal plan renders title, counts, and one row per todo", () => {
   const html = renderDashboardHtml(data(plan));
 
   assert.match(html, /Gacha Size Quiz/);
-  assert.match(html, /1 of 5 todos/);
+  assert.match(html, /1 of 5 done/);
   assert.match(html, /20%/);
   for (const id of ["TODO-001", "TODO-002", "TODO-003", "TODO-004", "TODO-005"]) {
     assert.ok(html.includes(id), `expected ${id} in html`);
@@ -81,10 +81,10 @@ test("sections render in ACTIVE, BLOCKED, TODO, DONE order", () => {
     makeTodo("TODO-002", 2, "IN_PROGRESS"),
   ]);
   const html = renderDashboardHtml(data(plan));
-  const active = html.indexOf("Active");
-  const blocked = html.indexOf("Blocked");
-  const todo = html.indexOf("Todo");
-  const done = html.indexOf("Done");
+  const active = html.indexOf('<span class="sec-label">Active</span>');
+  const blocked = html.indexOf('<span class="sec-label">Blocked</span>');
+  const todo = html.indexOf('<span class="sec-label">Todo</span>');
+  const done = html.indexOf('<span class="sec-label">Done</span>');
   assert.ok(active > -1 && blocked > -1 && todo > -1 && done > -1, "all sections present");
   assert.ok(active < blocked, "active before blocked");
   assert.ok(blocked < todo, "blocked before todo");
@@ -94,8 +94,8 @@ test("sections render in ACTIVE, BLOCKED, TODO, DONE order", () => {
 test("empty sections are omitted", () => {
   const plan = makePlan([makeTodo("TODO-001", 1, "DONE")]);
   const html = renderDashboardHtml(data(plan));
-  assert.ok(!html.includes("Blocked"), "no blocked section when none blocked");
-  assert.ok(html.includes("Done"), "done section present");
+  assert.ok(!html.includes('<span class="sec-label">Blocked</span>'), "no blocked section when none blocked");
+  assert.ok(html.includes('<span class="sec-label">Done</span>'), "done section present");
 });
 
 test("plan with zero todos shows No TODOs yet and 0%", () => {
@@ -103,12 +103,25 @@ test("plan with zero todos shows No TODOs yet and 0%", () => {
   const html = renderDashboardHtml(data(plan));
   assert.match(html, /No TODOs yet/);
   assert.match(html, /0%/);
+  assert.match(html, /class="progress state-open"/);
+  assert.match(html, /class="bar-fill" style="width:0%"/);
   assert.ok(!html.includes("of "), "no N of M label");
+});
+
+test("progress state color follows open, blocked, and done state", () => {
+  const open = renderDashboardHtml(data(makePlan([makeTodo("TODO-001", 1, "TODO")])));
+  const blocked = renderDashboardHtml(data(makePlan([makeTodo("TODO-001", 1, "BLOCKED")])));
+  const done = renderDashboardHtml(data(makePlan([makeTodo("TODO-001", 1, "DONE")])));
+
+  assert.match(open, /class="progress state-open"/);
+  assert.match(blocked, /class="progress state-blocked"/);
+  assert.match(done, /class="progress state-done"/);
 });
 
 test("null plan shows empty state", () => {
   const html = renderDashboardHtml(data(null));
   assert.match(html, /No active plan/);
+  assert.match(html, /\$watchtower new/);
   assert.match(html, /\/watchtower new/);
 });
 
@@ -155,8 +168,21 @@ test("html in title and slug is escaped", () => {
   assert.ok(!html.includes("<img src=x>"), "slug not raw-injected");
 });
 
-test("copy buttons carry /watchtower commands", () => {
+test("copy buttons carry Codex and Claude watchtower commands", () => {
   const html = renderDashboardHtml(data(makePlan([makeTodo("TODO-001", 1, "TODO")])));
+  assert.match(html, /\$watchtower/);
+  assert.match(html, /\/watchtower/);
+  assert.match(html, /Codex/);
+  assert.match(html, /Claude/);
+  assert.match(html, /data-text="\$watchtower next"/);
+  assert.match(html, /data-text="\$watchtower verify"/);
+  assert.match(html, /data-text="\$watchtower implement"/);
+  assert.match(html, /data-text="\$watchtower progress /);
+  assert.match(html, /data-text="\$watchtower archive"/);
   assert.match(html, /data-text="\/watchtower next"/);
   assert.match(html, /data-text="\/watchtower verify"/);
+  assert.match(html, /data-text="\/watchtower implement"/);
+  assert.match(html, /data-text="\/watchtower progress /);
+  assert.match(html, /data-text="\/watchtower archive"/);
+  assert.ok(!html.includes("Open NEXT"), "open next button removed");
 });

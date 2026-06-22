@@ -17,7 +17,10 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "workspaceContains:watchtower/NEXT.md"
+    "workspaceContains:watchtower/NEXT.md",
+    "onView:watchtower.tree",
+    "onCommand:watchtower.refresh",
+    "onCommand:watchtower.openNext"
   ],
   "contributes": {
     "viewsContainers": {
@@ -32,6 +35,7 @@
     "views": {
       "watchtower": [
         {
+          "type": "webview",
           "id": "watchtower.tree",
           "name": "Dashboard",
           "contextualTitle": "Watchtower"

@@ -6,6 +6,16 @@ export interface DashboardData {
   nextPath: string;
 }
 
+type CommandMode = "codex" | "claude";
+
+const COMMANDS = [
+  { label: "next", action: "next" },
+  { label: "verify", action: "verify" },
+  { label: "implement", action: "implement" },
+  { label: "progress", action: "progress", suffix: " " },
+  { label: "archive", action: "archive" },
+];
+
 const STATUS_SECTION_ORDER: { status: TodoStatus; label: string }[] = [
   { status: "IN_PROGRESS", label: "Active" },
   { status: "BLOCKED", label: "Blocked" },
@@ -49,22 +59,29 @@ function percent(done: number, total: number): number {
   return Math.round((done / total) * 100);
 }
 
+function progressState(plan: Plan): "done" | "blocked" | "open" {
+  if (plan.totalCount > 0 && plan.doneCount === plan.totalCount) return "done";
+  if (plan.todos.some((todo) => todo.status === "BLOCKED")) return "blocked";
+  return "open";
+}
+
 function todoRow(todo: Todo): string {
   const title = todo.title || todo.id;
+  const statusLabel = todo.status === "IN_PROGRESS" ? "Active" : todo.status.toLowerCase().replace("_", " ");
+  const rowInner =
+    `<span class="id">${escapeHtml(todo.id)}</span>` +
+    `<span class="ttl">${escapeHtml(title)}</span>` +
+    `<span class="row-status ${statusClass(todo.status)}">${escapeHtml(statusLabel)}</span>`;
   if (todo.specPath) {
     return (
       `<div class="row" data-action="open" data-path="${escapeHtml(todo.specPath)}" tabindex="0" role="button">` +
-      `<span class="dot ${statusClass(todo.status)}" aria-hidden="true"></span>` +
-      `<span class="id">${escapeHtml(todo.id)}</span>` +
-      `<span class="ttl">${escapeHtml(title)}</span>` +
+      rowInner +
       `</div>`
     );
   }
   return (
     `<div class="row static">` +
-    `<span class="dot ${statusClass(todo.status)}" aria-hidden="true"></span>` +
-    `<span class="id">${escapeHtml(todo.id)}</span>` +
-    `<span class="ttl">${escapeHtml(title)}</span>` +
+    rowInner +
     `</div>`
   );
 }
@@ -90,8 +107,9 @@ function archiveSection(archive: ArchivePlan[]): string {
     .map(
       (a) =>
         `<div class="row" data-action="openArchive" data-path="${escapeHtml(a.manifestPath)}" tabindex="0" role="button">` +
-        `<span class="dot st-archive" aria-hidden="true"></span>` +
+        `<span class="id">Archive</span>` +
         `<span class="ttl">${escapeHtml(a.slug)}</span>` +
+        `<span class="row-status st-archive">Saved</span>` +
         `</div>`,
     )
     .join("");
@@ -103,6 +121,42 @@ function archiveSection(archive: ArchivePlan[]): string {
     `<span class="sec-count">${archive.length}</span>` +
     `</button>` +
     `<div class="sec-body">${rows}</div>` +
+    `</div>`
+  );
+}
+
+function commandPrefix(mode: CommandMode): "$watchtower" | "/watchtower" {
+  return mode === "codex" ? "$watchtower" : "/watchtower";
+}
+
+function commandModeLabel(mode: CommandMode): "Codex" | "Claude" {
+  return mode === "codex" ? "Codex" : "Claude";
+}
+
+function commandButtons(mode: CommandMode): string {
+  const prefix = commandPrefix(mode);
+  return COMMANDS.map(
+    (cmd) => {
+      const text = `${prefix} ${cmd.action}${cmd.suffix ?? ""}`;
+      return (
+        `<button class="cmd-btn" data-action="copy" data-text="${escapeHtml(text)}" title="Copy ${escapeHtml(text)}">` +
+      `${escapeHtml(cmd.label)}` +
+        `</button>`
+      );
+    },
+  ).join("");
+}
+
+function commandGroup(mode: CommandMode): string {
+  return (
+    `<div class="cmd-group">` +
+    `<div class="cmd-agent">` +
+    `<span class="cmd-prefix">${commandPrefix(mode)}</span>` +
+    `<span class="cmd-mode">${commandModeLabel(mode)}</span>` +
+    `</div>` +
+    `<div class="cmd-actions">` +
+    commandButtons(mode) +
+    `</div>` +
     `</div>`
   );
 }
@@ -123,48 +177,41 @@ export function renderDashboardHtml(data: DashboardData): string {
     section(s.label, buckets[s.status], s.status === "DONE"),
   ).join("");
 
-  const ringFill = `var(--vscode-progressBar-background)`;
-  const ringTrack = `var(--vscode-editorWidget-background)`;
-  const ringStyle = `background: conic-gradient(${ringFill} 0 ${pct}%, ${ringTrack} ${pct}% 100%);`;
+  const progressClass = `progress state-${progressState(plan)}`;
 
   const ringLabel =
-    total === 0 ? `No TODOs yet` : `${done} of ${total} todos`;
+    total === 0 ? `No TODOs yet` : `${done} of ${total} done`;
 
   const planCardAttrs = nextPath
     ? ` data-action="openNext" data-path="${escapeHtml(nextPath)}" tabindex="0" role="button"`
     : "";
 
   return (
-    `<div class="head">` +
-    `<span class="brand">Watchtower</span>` +
-    `<button class="icon-btn" data-action="refresh" title="Refresh" aria-label="Refresh">` +
-    `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 3v3h-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>` +
-    `</button>` +
-    `</div>` +
     `<div class="plan-card"${planCardAttrs}>` +
+    `<div class="plan-top">` +
     `<div class="plan-title">${escapeHtml(plan.title || "Untitled plan")}</div>` +
+    `<span class="badge">${escapeHtml(plan.status)}</span>` +
+    `</div>` +
     `<div class="plan-meta">` +
     (plan.slug ? `<span class="slug">${escapeHtml(plan.slug)}</span>` : "") +
-    `<span class="badge">${escapeHtml(plan.status)}</span>` +
     (plan.updated ? `<span class="muted">Updated ${escapeHtml(plan.updated)}</span>` : "") +
     `</div>` +
     `</div>` +
-    `<div class="progress">` +
-    `<div class="ring" style="${ringStyle}"><span class="ring-pct">${pct}%</span></div>` +
-    `<div class="ring-label">${ringLabel}</div>` +
+    `<div class="${progressClass}" aria-label="Plan progress">` +
+    `<div class="progress-head">` +
+    `<span class="progress-value">${pct}%</span>` +
+    `<span class="ring-label">${ringLabel}</span>` +
+    `</div>` +
     `<div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>` +
     `</div>` +
     `<div class="stats">` +
-    `<div class="stat"><b class="st-done">${done}</b><small>DONE</small></div>` +
-    `<div class="stat"><b class="st-in_progress">${buckets.IN_PROGRESS.length}</b><small>ACTIVE</small></div>` +
-    `<div class="stat"><b class="st-blocked">${buckets.BLOCKED.length}</b><small>BLOCKED</small></div>` +
+    `<div class="stat"><small>Done</small><b class="st-done">${done}</b></div>` +
+    `<div class="stat"><small>Active</small><b class="st-in_progress">${buckets.IN_PROGRESS.length}</b></div>` +
+    `<div class="stat"><small>Blocked</small><b class="st-blocked">${buckets.BLOCKED.length}</b></div>` +
     `</div>` +
-    `<div class="actions">` +
-    (nextPath
-      ? `<button class="btn" data-action="openNext" data-path="${escapeHtml(nextPath)}">Open NEXT</button>`
-      : "") +
-    `<button class="btn" data-action="copy" data-text="/watchtower next">Copy /next</button>` +
-    `<button class="btn" data-action="copy" data-text="/watchtower verify">Copy /verify</button>` +
+    `<div class="command-bar" aria-label="Watchtower commands">` +
+    commandGroup("codex") +
+    commandGroup("claude") +
     `</div>` +
     `<div class="list">${sections}${archiveSection(archive)}</div>` +
     `<div class="toast" id="toast" hidden>Copied</div>`
@@ -176,9 +223,9 @@ function emptyState(nextPath: string): string {
     `<div class="empty">` +
     `<div class="empty-title">No active plan</div>` +
     `<div class="empty-sub">No watchtower/NEXT.md found in this workspace.</div>` +
-    `<div class="empty-hint">Run <code>/watchtower new &lt;summary&gt;</code> to start a plan.</div>` +
+    `<div class="empty-hint">Run <code>$watchtower new &lt;summary&gt;</code> or <code>/watchtower new &lt;summary&gt;</code>.</div>` +
     (nextPath
-      ? `<button class="btn" data-action="openNext" data-path="${escapeHtml(nextPath)}">Open NEXT.md</button>`
+      ? `<button class="cmd-btn" data-action="openNext" data-path="${escapeHtml(nextPath)}">Open NEXT.md</button>`
       : "") +
     `</div>`
   );
