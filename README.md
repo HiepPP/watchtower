@@ -1,11 +1,11 @@
-## NEXT Explorer
+# NEXT Explorer
 
 [![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/HiepPP/next-explorer)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85.0-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](#license)
 
-A read-only VS Code sidebar that shows your workspace's active next-todo plan as a live status tree.
+A read-only VS Code sidebar that shows your workspace's active NEXT plan as a live status tree.
 
 NEXT Explorer reads the `next/` directory and never edits your plan files. It gives you a quick view of plan progress, TODO status, and past plans without opening Markdown by hand.
 
@@ -18,6 +18,7 @@ NEXT Explorer reads the `next/` directory and never edits your plan files. It gi
 - [Requirements](#requirements)
 - [Install](#install)
 - [Usage](#usage)
+- [Using The /next-explorer Skill](#using-the-next-explorer-skill)
 - [Expected Plan Layout](#expected-plan-layout)
 - [Commands](#commands)
 - [Status Icons](#status-icons)
@@ -39,7 +40,7 @@ NEXT Explorer reads the `next/` directory and never edits your plan files. It gi
 
 ## Why NEXT Explorer
 
-The next-todo workflow keeps plans as plain Markdown in a `next/` directory. That is easy to edit but hard to scan at a glance.
+The `/next-explorer` skill keeps plans as plain Markdown in a `next/` directory. That is easy to edit but hard to scan at a glance.
 
 | Without the extension | With NEXT Explorer |
 |---|---|
@@ -83,6 +84,41 @@ What each node does:
 - Archive node: expand to browse past plans from `next/archive/`.
 
 If a workspace has a `next/` folder but no `next/NEXT.md`, the view shows `No active plan in next/`.
+
+## Using The /next-explorer Skill
+
+`/next-explorer` creates and updates the plan files that this extension reads.
+The skill writes Markdown. The VS Code extension only displays it.
+
+| Task | Command | Result |
+|---|---|---|
+| Create a plan | `/next-explorer new <summary>` | Creates `next/NEXT.md`, `next/CONTEXT.md`, and TODO specs |
+| Ask what to do next | `/next-explorer next` or `what next?` | Reads the Tracker and proposes the next TODO |
+| Update status | `/next-explorer progress <summary>` | Updates Tracker status and TODO Outcome notes |
+| Run checks | `/next-explorer verify` | Runs TODO checks and marks passing TODOs as `DONE` |
+| Build work | `/next-explorer implement` | Builds the current TODO and records the real result |
+| Build with agents | `/next-explorer implement team` | Splits safe work across subagents, then shuts them down |
+| Archive a plan | `/next-explorer archive` | Moves the active plan into `next/archive/<slug>/` |
+
+Common flow:
+
+```bash
+/next-explorer new add billing settings cleanup
+/next-explorer next
+/next-explorer implement
+/next-explorer verify
+/next-explorer archive
+```
+
+Use `--repo <path>` when your shell is not already inside the target repo:
+
+```bash
+/next-explorer next --repo /path/to/project
+```
+
+The skill keeps active work in `next/NEXT.md`.
+It writes TODO details under `next/todos/`.
+It moves finished plans into `next/archive/`.
 
 ## Expected Plan Layout
 
