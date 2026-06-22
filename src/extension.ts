@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { WatchtowerTreeProvider } from "./tree.ts";
+import { WatchtowerDashboardProvider } from "./dashboardProvider.ts";
 import { type TodoStatus } from "./model.ts";
 import { readPlan } from "./parser.ts";
 import { summarize, detectNewlyBlocked } from "./status.ts";
@@ -50,11 +50,7 @@ async function openTextAtLine(uri: vscode.Uri, line: number): Promise<void> {
 
 export function activate(context: vscode.ExtensionContext): void {
   const rootDir = findRootDir();
-  const provider = new WatchtowerTreeProvider(rootDir);
-
-  const treeView = vscode.window.createTreeView("watchtower.tree", {
-    treeDataProvider: provider,
-  });
+  const provider = new WatchtowerDashboardProvider(rootDir ?? "", context.extensionUri);
 
   const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
   statusBar.command = "workbench.view.extension.watchtower";
@@ -62,17 +58,12 @@ export function activate(context: vscode.ExtensionContext): void {
   const updateStatus = (): void => {
     const plan = rootDir ? readPlan(rootDir) : null;
     if (!plan) {
-      treeView.description = undefined;
-      treeView.badge = undefined;
       statusBar.hide();
       prevStatus.clear();
       return;
     }
 
-    const { done, total, remaining, inProgressId } = summarize(plan);
-    treeView.description = `${done}/${total}`;
-    treeView.badge =
-      remaining > 0 ? { value: remaining, tooltip: `${remaining} remaining` } : undefined;
+    const { done, total, inProgressId } = summarize(plan);
     statusBar.text =
       `$(telescope) Watchtower ${done}/${total}` + (inProgressId ? ` - ${inProgressId}` : "");
     statusBar.tooltip = `${done} of ${total} done`;
@@ -92,9 +83,8 @@ export function activate(context: vscode.ExtensionContext): void {
   };
 
   context.subscriptions.push(
-    provider,
-    treeView,
     statusBar,
+    vscode.window.registerWebviewViewProvider("watchtower.tree", provider),
     vscode.commands.registerCommand("watchtower.refresh", () => {
       provider.refresh();
       updateStatus();

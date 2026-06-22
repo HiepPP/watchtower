@@ -1,10 +1,14 @@
 {
   "name": "watchtower",
   "displayName": "Watchtower",
-  "description": "Show the active Watchtower plan from a workspace watchtower/ directory as a status tree.",
+  "description": "Show the active Watchtower plan from a workspace watchtower/ directory as a visual dashboard.",
   "version": "0.1.0",
   "publisher": "local",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HiepPP/watchtower.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -13,7 +17,10 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "workspaceContains:watchtower/NEXT.md"
+    "workspaceContains:watchtower/NEXT.md",
+    "onView:watchtower.tree",
+    "onCommand:watchtower.refresh",
+    "onCommand:watchtower.openNext"
   ],
   "contributes": {
     "viewsContainers": {
@@ -28,8 +35,9 @@
     "views": {
       "watchtower": [
         {
+          "type": "webview",
           "id": "watchtower.tree",
-          "name": "Plan",
+          "name": "Dashboard",
           "contextualTitle": "Watchtower"
         }
       ]
