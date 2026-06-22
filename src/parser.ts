@@ -51,6 +51,25 @@ function resolveSpec(todosDir: string, cell: string): string | null {
   return path.join(todosDir, path.basename(raw));
 }
 
+function resolveOutcome(todosDir: string, todoId: string, specPath: string | null): string | null {
+  if (!todoId) return null;
+  const dir = specPath ? path.dirname(specPath) : todosDir;
+  const exact = path.join(dir, `${todoId}-outcome.md`);
+  if (fs.existsSync(exact)) return exact;
+
+  let entries: string[];
+  try {
+    entries = fs.readdirSync(dir);
+  } catch {
+    return null;
+  }
+
+  const match = entries
+    .filter((entry) => entry.startsWith(`${todoId}-`) && entry.endsWith("-outcome.md"))
+    .sort((a, b) => a.localeCompare(b))[0];
+  return match ? path.join(dir, match) : null;
+}
+
 function parseTracker(content: string, todosDir: string): Todo[] {
   const lines = trackerBlock(content).split(/\r?\n/);
   const headerIdx = lines.findIndex((l) => {
@@ -75,14 +94,17 @@ function parseTracker(content: string, todosDir: string): Todo[] {
     const [orderCell, todoCell, groupCell, statusCell, specCell, depsCell, , notesCell] = cells;
     const idMatch = (todoCell ?? "").match(/^(TODO-\d+)\s*(.*)$/);
     const order = Number.parseInt(orderCell ?? "", 10);
+    const id = idMatch ? idMatch[1] : (todoCell ?? "").trim();
+    const specPath = resolveSpec(todosDir, specCell ?? "");
 
     todos.push({
       order: Number.isNaN(order) ? todos.length + 1 : order,
-      id: idMatch ? idMatch[1] : (todoCell ?? "").trim(),
+      id,
       title: idMatch ? idMatch[2].trim() : "",
       group: (groupCell ?? "").trim(),
       status: toTodoStatus(statusCell ?? ""),
-      specPath: resolveSpec(todosDir, specCell ?? ""),
+      specPath,
+      outcomePath: resolveOutcome(todosDir, id, specPath),
       deps: (depsCell ?? "").trim(),
       notes: (notesCell ?? "").trim(),
     });

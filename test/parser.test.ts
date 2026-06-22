@@ -1,9 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toTodoStatus, toPlanStatus } from "../src/model.ts";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { tmpdir } from "node:os";
 import { parsePlanContent, parseTodoFile, readTodoFile } from "../src/parser.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -113,6 +114,34 @@ test("parsePlanContent resolves markdown-link Spec cells (active-plan form)", ()
   assert.equal(plan.todos[0].status, "IN_PROGRESS");
   assert.equal(plan.todos[0].group, "A");
   assert.equal(plan.todos[0].specPath, "/ws/watchtower/todos/TODO-001-foo.md");
+  assert.equal(plan.todos[0].outcomePath, null);
+});
+
+test("parsePlanContent resolves existing outcome files beside TODO specs", () => {
+  const root = mkdtempSync(join(tmpdir(), "watchtower-parser-"));
+  const todosDir = join(root, "watchtower", "todos");
+  mkdirSync(todosDir, { recursive: true });
+  writeFileSync(join(todosDir, "TODO-001-outcome.md"), "# Outcome\n");
+
+  const content = [
+    "# NEXT",
+    "",
+    "## Current Active Plan",
+    "",
+    "- Title: Outcome File",
+    "- Slug: 20260101-outcome-file",
+    "- Status: ACTIVE",
+    "- Updated: 2026-01-01",
+    "",
+    "## Tracker",
+    "",
+    "| Order | TODO | Group | Status | Spec | Deps | Context | Notes |",
+    "|-------|------|-------|--------|------|------|---------|-------|",
+    "| 1 | TODO-001 Foo | A | DONE | watchtower/todos/TODO-001-foo.md | - | - | done |",
+  ].join("\n");
+
+  const plan = parsePlanContent(content, join(root, "watchtower", "NEXT.md"));
+  assert.equal(plan.todos[0].outcomePath, join(todosDir, "TODO-001-outcome.md"));
 });
 
 test("parsePlanContent returns no todos when Tracker section is absent", () => {

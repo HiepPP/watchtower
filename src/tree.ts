@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import { type Plan, type Todo } from "./model.ts";
 import { readPlan } from "./parser.ts";
 
-type NodeKind = "empty" | "file" | "todosRoot" | "todo";
+type NodeKind = "empty" | "file" | "todosRoot" | "todo" | "outcome";
 
 interface NodeData {
   fsPath?: string;
@@ -126,7 +126,7 @@ export class WatchtowerTreeProvider implements vscode.TreeDataProvider<Watchtowe
     return plan.todos
       .filter((todo): todo is Todo & { specPath: string } => Boolean(todo.specPath))
       .sort((a, b) => a.order - b.order)
-      .map((todo) => {
+      .flatMap((todo) => {
         const fileName = path.basename(todo.specPath);
         const node = new WatchtowerNode("todo", fileName, vscode.TreeItemCollapsibleState.None, {
           fsPath: todo.specPath,
@@ -136,7 +136,25 @@ export class WatchtowerTreeProvider implements vscode.TreeDataProvider<Watchtowe
         node.iconPath = new vscode.ThemeIcon("file");
         node.command = openCommand(todo.specPath, 0);
         node.tooltip = fileName;
-        return node;
+        const nodes = [node];
+        if (todo.outcomePath) {
+          const outcomeFileName = path.basename(todo.outcomePath);
+          const outcomeNode = new WatchtowerNode(
+            "outcome",
+            outcomeFileName,
+            vscode.TreeItemCollapsibleState.None,
+            {
+              fsPath: todo.outcomePath,
+              todo,
+            },
+          );
+          outcomeNode.resourceUri = vscode.Uri.file(todo.outcomePath);
+          outcomeNode.iconPath = new vscode.ThemeIcon("output");
+          outcomeNode.command = openCommand(todo.outcomePath, 0);
+          outcomeNode.tooltip = outcomeFileName;
+          nodes.push(outcomeNode);
+        }
+        return nodes;
       });
   }
 }

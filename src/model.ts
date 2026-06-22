@@ -13,6 +13,7 @@ export interface Todo {
   group: string;
   status: TodoStatus;
   specPath: string | null;
+  outcomePath: string | null;
   deps: string;
   notes: string;
 }
