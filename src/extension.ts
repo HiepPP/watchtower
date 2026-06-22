@@ -2,9 +2,16 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { WatchtowerTreeProvider } from "./tree.ts";
+import { type TodoStatus } from "./model.ts";
+import { readPlan } from "./parser.ts";
+import { summarize, detectNewlyBlocked } from "./status.ts";
 
 const PLAN_DIR = "watchtower";
 const PLAN_FILE = "NEXT.md";
+
+// Snapshot of last-seen status per TODO id. Module-level so it survives across
+// updateStatus calls. Empty on first load: detectNewlyBlocked stays quiet, then seeds.
+const prevStatus = new Map<string, TodoStatus>();
 
 function findRootDir(): string | undefined {
   const folders = vscode.workspace.workspaceFolders ?? [];
@@ -45,10 +52,53 @@ export function activate(context: vscode.ExtensionContext): void {
   const rootDir = findRootDir();
   const provider = new WatchtowerTreeProvider(rootDir);
 
+  const treeView = vscode.window.createTreeView("watchtower.tree", {
+    treeDataProvider: provider,
+  });
+
+  const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+  statusBar.command = "workbench.view.extension.watchtower";
+
+  const updateStatus = (): void => {
+    const plan = rootDir ? readPlan(rootDir) : null;
+    if (!plan) {
+      treeView.description = undefined;
+      treeView.badge = undefined;
+      statusBar.hide();
+      prevStatus.clear();
+      return;
+    }
+
+    const { done, total, remaining, inProgressId } = summarize(plan);
+    treeView.description = `${done}/${total}`;
+    treeView.badge =
+      remaining > 0 ? { value: remaining, tooltip: `${remaining} remaining` } : undefined;
+    statusBar.text =
+      `$(telescope) Watchtower ${done}/${total}` + (inProgressId ? ` - ${inProgressId}` : "");
+    statusBar.tooltip = `${done} of ${total} done`;
+    statusBar.show();
+
+    for (const id of detectNewlyBlocked(prevStatus, plan.todos)) {
+      const specPath = plan.todos.find((t) => t.id === id)?.specPath ?? null;
+      void vscode.window
+        .showWarningMessage(`Watchtower: ${id} is BLOCKED`, "Show")
+        .then((choice) => {
+          if (choice === "Show" && specPath) void openFileAtLine(specPath, 0);
+        });
+    }
+
+    prevStatus.clear();
+    for (const t of plan.todos) prevStatus.set(t.id, t.status);
+  };
+
   context.subscriptions.push(
     provider,
-    vscode.window.registerTreeDataProvider("watchtower.tree", provider),
-    vscode.commands.registerCommand("watchtower.refresh", () => provider.refresh()),
+    treeView,
+    statusBar,
+    vscode.commands.registerCommand("watchtower.refresh", () => {
+      provider.refresh();
+      updateStatus();
+    }),
     vscode.commands.registerCommand("watchtower.open", (fsPath: string, line: number) =>
       openFileAtLine(fsPath, line ?? 0),
     ),
@@ -62,11 +112,17 @@ export function activate(context: vscode.ExtensionContext): void {
     const watcher = vscode.workspace.createFileSystemWatcher(
       new vscode.RelativePattern(rootDir, `${PLAN_DIR}/**`),
     );
-    watcher.onDidChange(() => provider.refresh());
-    watcher.onDidCreate(() => provider.refresh());
-    watcher.onDidDelete(() => provider.refresh());
+    const onPlanChange = (): void => {
+      provider.refresh();
+      updateStatus();
+    };
+    watcher.onDidChange(onPlanChange);
+    watcher.onDidCreate(onPlanChange);
+    watcher.onDidDelete(onPlanChange);
     context.subscriptions.push(watcher);
   }
+
+  updateStatus();
 }
 
 export function deactivate(): void {}

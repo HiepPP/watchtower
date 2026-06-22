@@ -3,6 +3,7 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import { type Plan, type Todo } from "./model.ts";
 import { readPlan } from "./parser.ts";
+import { statusIcon } from "./status.ts";
 
 type NodeKind = "empty" | "file" | "todosRoot" | "todo" | "outcome";
 
@@ -133,9 +134,15 @@ export class WatchtowerTreeProvider implements vscode.TreeDataProvider<Watchtowe
           todo,
         });
         node.resourceUri = vscode.Uri.file(todo.specPath);
-        node.iconPath = new vscode.ThemeIcon("file");
+        node.iconPath = statusIcon(todo.status);
+        node.description = todo.group ? `${todo.group} - ${todo.status}` : todo.status;
         node.command = openCommand(todo.specPath, 0);
-        node.tooltip = fileName;
+        node.tooltip = [
+          todo.id,
+          `Status: ${todo.status}`,
+          `Deps: ${todo.deps || "-"}`,
+          `Notes: ${todo.notes || "-"}`,
+        ].join("\n");
         const nodes = [node];
         if (todo.outcomePath) {
           const outcomeFileName = path.basename(todo.outcomePath);

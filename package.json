@@ -58,7 +58,7 @@
   "scripts": {
     "compile": "tsc --noEmit && node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
-    "test": "node --experimental-strip-types --test 'test/*.ts'",
+    "test": "node --experimental-strip-types --import ./test/register-vscode.mjs --test 'test/*.ts'",
     "package": "npm run compile && vsce package --allow-missing-repository --skip-license"
   },
   "devDependencies": {
