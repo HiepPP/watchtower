@@ -1,5 +1,7 @@
 # Watchtower
 
+![Watchtower fantasy banner](media/watchtower-banner.png)
+
 [![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/HiepPP/watchtower)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85.0-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
