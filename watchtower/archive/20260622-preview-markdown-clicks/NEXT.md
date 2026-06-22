@@ -4,7 +4,7 @@
 
 - Title: Preview Markdown Clicks And File Tree UI
 - Slug: 20260622-preview-markdown-clicks
-- Status: ACTIVE
+- Status: ARCHIVED
 - Updated: 2026-06-22
 
 ## Tracker
@@ -27,4 +27,4 @@
 
 ## Archive
 
-- None.
+- Archived: 2026-06-22 -> watchtower/archive/20260622-preview-markdown-clicks/
