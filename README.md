@@ -7,9 +7,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](#license)
 
-A read-only VS Code sidebar that shows your workspace's Watchtower plan files as a simple tree.
+A read-only VS Code sidebar dashboard for your workspace's Watchtower plan files.
 
-Watchtower reads the `watchtower/` directory and never edits your plan files. It gives you a quick view of plan progress, TODO status, and past plans without opening Markdown by hand.
+Watchtower reads the `watchtower/` directory and never edits your plan files. It shows plan progress, TODO status, blocked work, past plans, and copy-ready commands.
 
 <!-- Demo: replace with a screenshot or GIF of the Watchtower sidebar in action. -->
 
@@ -31,8 +31,11 @@ Watchtower reads the `watchtower/` directory and never edits your plan files. It
 
 ## Features
 
-- Shows `NEXT.md`, `CONTEXT.md`, and a `TODOS` folder.
-- Lists one file node per Tracker TODO under `TODOS`.
+- Shows a dashboard with progress, status counts, TODO sections, and archive rows.
+- Groups TODOs by Active, Blocked, Todo, and Done.
+- Shows a blocked summary when any TODO is stuck.
+- Opens `NEXT.md`, `CONTEXT.md`, TODO specs, and archived plans.
+- Copies `$watchtower` and `/watchtower` commands from the sidebar.
 - Opens Markdown files in rendered preview by default.
 - Refreshes on its own when any file under `watchtower/` changes.
 - Read-only by design. It never writes to your plan files.
@@ -43,8 +46,8 @@ The `/watchtower` skill keeps plans as plain Markdown in a `watchtower/` directo
 
 | Without the extension | With Watchtower |
 |---|---|
-| Open `NEXT.md` and read paths by hand | See `NEXT.md`, `CONTEXT.md`, and `TODOS` in the sidebar |
-| Hunt for a spec file path | Expand `TODOS` and click the full TODO filename |
+| Open `NEXT.md` and count rows by hand | See progress, status counts, and blocked work in the sidebar |
+| Hunt for a spec file path | Open a grouped TODO row from the dashboard |
 | Open Markdown source by mistake | Clicks open rendered preview by default |
 
 ## Requirements
@@ -70,16 +73,17 @@ Once installed, the Watchtower icon appears in the Activity Bar of any workspace
 
 1. Open a workspace that has a `watchtower/NEXT.md` file.
 2. Click the Watchtower icon in the Activity Bar.
-3. The Plan view shows `NEXT.md`, `CONTEXT.md`, and `TODOS`.
+3. The Dashboard view shows plan progress, file actions, commands, TODOs, and archive rows.
 
-What each node does:
+What each area does:
 
-- `NEXT.md`: previews `watchtower/NEXT.md`.
-- `CONTEXT.md`: previews `watchtower/CONTEXT.md`.
-- `TODOS`: expands to TODO file nodes.
-- `TODO-001-...md`, `TODO-nnn-...md`: preview each TODO spec file.
+- Plan card: opens `watchtower/NEXT.md`.
+- File actions: open `NEXT.md` and `CONTEXT.md`.
+- Command groups: copy `$watchtower` or `/watchtower` commands.
+- TODO rows: preview each TODO spec file.
+- Archive rows: preview archived `NEXT.md` files.
 
-If a workspace has a `watchtower/` folder but no `watchtower/NEXT.md`, the view shows `No active plan in watchtower/`.
+If the active plan is missing, the dashboard shows `No active plan`.
 
 ## Using The /watchtower Skill
 
@@ -161,32 +165,31 @@ Notes on parsing:
 | `watchtower.refresh` | Watchtower: Refresh Plan | Refresh icon in the view title bar |
 | `watchtower.openNext` | Watchtower: Open NEXT.md | Command Palette |
 
-Tree clicks open Markdown files in the rendered preview by default.
+Dashboard clicks open Markdown files in the rendered preview by default.
 
 The view also refreshes on its own when files under `watchtower/` change, so manual refresh is rarely needed.
 
 ## Architecture
 
-The extension activates on a workspace that contains `watchtower/NEXT.md`, builds a tree provider, and re-reads the plan whenever `watchtower/` changes.
+The extension activates on a workspace that contains `watchtower/NEXT.md`, builds a webview dashboard, and re-reads the plan whenever `watchtower/` changes.
 
 ```text
 VS Code activates (workspaceContains:watchtower/NEXT.md)
   |
   v
-activate()  -->  findRootDir()  picks the workspace folder with watchtower/NEXT.md
+activate()  -->  findRootDir()
   |
   v
-WatchtowerTreeProvider  -->  readPlan(watchtower/NEXT.md)
-  |                       |
-  |                       v
-  |                  parsePlanContent()  reads header + Tracker table
-  |                       |
-  |
-  v
-Tree nodes:  NEXT.md, CONTEXT.md, TODOS  ->  TODO files
+WatchtowerDashboardProvider  -->  readPlan(watchtower/NEXT.md)
+  |                            |
+  |                            v
+  |                       renderDashboardHtml()
+  |                            |
+  v                            v
+Webview dashboard  <-->  postMessage open/copy/refresh
   ^
   |
-File watcher on watchtower/**  -->  provider.refresh()  on change/create/delete
+File watcher on watchtower/**  -->  provider.refresh()
 ```
 
 | File | Responsibility |
@@ -194,7 +197,10 @@ File watcher on watchtower/**  -->  provider.refresh()  on change/create/delete
 | `src/extension.ts` | Activation, root folder resolution, commands, file watcher |
 | `src/parser.ts` | Reads and parses `NEXT.md` and spec files, lists the archive |
 | `src/model.ts` | Types and status mapping for plans and TODOs |
-| `src/tree.ts` | Tree data provider, node building, icons, and tooltips |
+| `src/dashboardProvider.ts` | Webview provider, file actions, copy actions, refresh |
+| `src/dashboardHtml.ts` | Pure HTML renderer for dashboard state |
+| `media/dashboard.css` | VS Code themed dashboard styles |
+| `media/dashboard.js` | Webview click handling, collapse state, toast |
 
 ## Develop
 
@@ -204,7 +210,7 @@ npm run compile
 npm test
 ```
 
-Press F5 from the project folder to launch the Extension Development Host. Open a workspace with a `watchtower/NEXT.md` file to see the tree.
+Press F5 from the project folder to launch the Extension Development Host. Open a workspace with a `watchtower/NEXT.md` file to see the dashboard.
 
 Use watch mode to rebuild on save:
 

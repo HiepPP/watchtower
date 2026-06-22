@@ -37,8 +37,13 @@ function makePlan(todos: Todo[], overrides: Partial<Plan> = {}): Plan {
   };
 }
 
-function data(plan: Plan | null, archive: ArchivePlan[] = [], nextPath = "/ws/watchtower/NEXT.md"): DashboardData {
-  return { plan, archive, nextPath };
+function data(
+  plan: Plan | null,
+  archive: ArchivePlan[] = [],
+  nextPath = "/ws/watchtower/NEXT.md",
+  contextPath = "/ws/watchtower/CONTEXT.md",
+): DashboardData {
+  return { plan, archive, nextPath, contextPath };
 }
 
 test("normal plan renders title, counts, and one row per todo", () => {
@@ -126,7 +131,7 @@ test("null plan shows empty state", () => {
 });
 
 test("null plan without nextPath hides Open NEXT.md button", () => {
-  const html = renderDashboardHtml({ plan: null, archive: [], nextPath: "" });
+  const html = renderDashboardHtml({ plan: null, archive: [], nextPath: "", contextPath: "" });
   assert.ok(!html.includes("Open NEXT.md"), "no open button when next missing");
 });
 
@@ -157,6 +162,26 @@ test("archive rows use openArchive action with manifest path", () => {
   assert.match(html, /data-action="openArchive" data-path="\/ws\/watchtower\/archive\/s1\/NEXT\.md"/);
 });
 
+test("file actions open NEXT and CONTEXT when both files exist", () => {
+  const html = renderDashboardHtml(data(makePlan([makeTodo("TODO-001", 1, "TODO")])));
+  assert.match(html, /class="file-actions"/);
+  assert.match(html, /data-action="openNext" data-path="\/ws\/watchtower\/NEXT\.md"/);
+  assert.match(html, /data-action="open" data-path="\/ws\/watchtower\/CONTEXT\.md"/);
+  assert.match(html, /Open NEXT/);
+  assert.match(html, /Open CONTEXT/);
+});
+
+test("blocked note shows blocked todo ids", () => {
+  const plan = makePlan([
+    makeTodo("TODO-001", 1, "TODO"),
+    makeTodo("TODO-002", 2, "BLOCKED"),
+    makeTodo("TODO-003", 3, "BLOCKED"),
+  ]);
+  const html = renderDashboardHtml(data(plan));
+  assert.match(html, /class="blocked-note"/);
+  assert.match(html, /TODO-002, TODO-003 needs attention\./);
+});
+
 test("html in title and slug is escaped", () => {
   const plan = makePlan([], {
     title: "<b>bold</b>",
@@ -184,5 +209,4 @@ test("copy buttons carry Codex and Claude watchtower commands", () => {
   assert.match(html, /data-text="\/watchtower implement"/);
   assert.match(html, /data-text="\/watchtower progress /);
   assert.match(html, /data-text="\/watchtower archive"/);
-  assert.ok(!html.includes("Open NEXT"), "open next button removed");
 });

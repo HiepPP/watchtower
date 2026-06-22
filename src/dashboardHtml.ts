@@ -4,6 +4,7 @@ export interface DashboardData {
   plan: Plan | null;
   archive: ArchivePlan[];
   nextPath: string;
+  contextPath: string;
 }
 
 type CommandMode = "codex" | "claude";
@@ -86,11 +87,11 @@ function todoRow(todo: Todo): string {
   );
 }
 
-function section(label: string, todos: Todo[], collapsed: boolean): string {
+function section(id: string, label: string, todos: Todo[], collapsed: boolean): string {
   if (todos.length === 0) return "";
   const sorted = [...todos].sort((a, b) => a.order - b.order);
   return (
-    `<div class="section${collapsed ? " collapsed" : ""}">` +
+    `<div class="section${collapsed ? " collapsed" : ""}" data-section-id="${escapeHtml(id)}">` +
     `<button class="sec-head" type="button" aria-expanded="${!collapsed}">` +
     `<svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>` +
     `<span class="sec-label">${escapeHtml(label)}</span>` +
@@ -114,13 +115,28 @@ function archiveSection(archive: ArchivePlan[]): string {
     )
     .join("");
   return (
-    `<div class="section collapsed">` +
+    `<div class="section collapsed" data-section-id="archive">` +
     `<button class="sec-head" type="button" aria-expanded="false">` +
     `<svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>` +
     `<span class="sec-label">Archive</span>` +
     `<span class="sec-count">${archive.length}</span>` +
     `</button>` +
     `<div class="sec-body">${rows}</div>` +
+    `</div>`
+  );
+}
+
+function blockedNote(todos: Todo[]): string {
+  const blocked = todos
+    .filter((todo) => todo.status === "BLOCKED")
+    .sort((a, b) => a.order - b.order);
+  if (blocked.length === 0) return "";
+  const preview = blocked.slice(0, 3).map((todo) => todo.id).join(", ");
+  const suffix = blocked.length > 3 ? ` +${blocked.length - 3} more` : "";
+  return (
+    `<div class="blocked-note" role="status">` +
+    `<span class="blocked-title">Blocked</span>` +
+    `<span class="blocked-copy">${escapeHtml(`${preview}${suffix} needs attention.`)}</span>` +
     `</div>`
   );
 }
@@ -161,8 +177,20 @@ function commandGroup(mode: CommandMode): string {
   );
 }
 
+function fileActions(nextPath: string, contextPath: string): string {
+  const buttons = [
+    nextPath
+      ? `<button class="file-btn" data-action="openNext" data-path="${escapeHtml(nextPath)}">Open NEXT</button>`
+      : "",
+    contextPath
+      ? `<button class="file-btn" data-action="open" data-path="${escapeHtml(contextPath)}">Open CONTEXT</button>`
+      : "",
+  ].join("");
+  return buttons ? `<div class="file-actions">${buttons}</div>` : "";
+}
+
 export function renderDashboardHtml(data: DashboardData): string {
-  const { plan, archive, nextPath } = data;
+  const { plan, archive, nextPath, contextPath } = data;
 
   if (!plan) {
     return emptyState(nextPath);
@@ -174,7 +202,7 @@ export function renderDashboardHtml(data: DashboardData): string {
   const buckets = bucketTodos(plan.todos);
 
   const sections = STATUS_SECTION_ORDER.map((s) =>
-    section(s.label, buckets[s.status], s.status === "DONE"),
+    section(s.status.toLowerCase(), s.label, buckets[s.status], s.status === "DONE"),
   ).join("");
 
   const progressClass = `progress state-${progressState(plan)}`;
@@ -209,6 +237,8 @@ export function renderDashboardHtml(data: DashboardData): string {
     `<div class="stat"><small>Active</small><b class="st-in_progress">${buckets.IN_PROGRESS.length}</b></div>` +
     `<div class="stat"><small>Blocked</small><b class="st-blocked">${buckets.BLOCKED.length}</b></div>` +
     `</div>` +
+    blockedNote(plan.todos) +
+    fileActions(nextPath, contextPath) +
     `<div class="command-bar" aria-label="Watchtower commands">` +
     commandGroup("codex") +
     commandGroup("claude") +

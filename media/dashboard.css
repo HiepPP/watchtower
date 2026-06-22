@@ -198,6 +198,64 @@ body {
   color: var(--blocked);
 }
 
+/* Blocked summary */
+.blocked-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--blocked) 55%, transparent);
+  background: color-mix(in srgb, var(--blocked) 12%, transparent);
+}
+
+.blocked-title {
+  color: var(--blocked);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.blocked-copy {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--vscode-foreground);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* File actions */
+.file-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.file-btn {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-btn:hover {
+  background: var(--surface-strong);
+}
+
 /* Commands */
 .command-bar {
   display: flex;
@@ -450,6 +508,7 @@ body {
 /* Focus + scrollbars */
 .row[role="button"]:focus-visible,
 .cmd-btn:focus-visible,
+.file-btn:focus-visible,
 .sec-head:focus-visible,
 .plan-card[role="button"]:focus-visible {
   outline: 1px solid var(--vscode-focusBorder);

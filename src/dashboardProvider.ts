@@ -41,8 +41,10 @@ export class WatchtowerDashboardProvider implements vscode.WebviewViewProvider {
     const plan = this.rootDir ? readPlan(this.rootDir) : null;
     const archive = this.rootDir ? listArchive(this.rootDir) : [];
     const nextAbs = this.rootDir ? path.join(this.rootDir, "watchtower", "NEXT.md") : "";
+    const contextAbs = this.rootDir ? path.join(this.rootDir, "watchtower", "CONTEXT.md") : "";
     const nextPath = nextAbs && fs.existsSync(nextAbs) ? nextAbs : "";
-    return { plan, archive, nextPath };
+    const contextPath = contextAbs && fs.existsSync(contextAbs) ? contextAbs : "";
+    return { plan, archive, nextPath, contextPath };
   }
 
   private document(): string {

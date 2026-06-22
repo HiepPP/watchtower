@@ -2,6 +2,7 @@
 const vscode = acquireVsCodeApi();
 const toast = document.getElementById("toast");
 let toastTimer = 0;
+const state = vscode.getState() || { collapsed: {} };
 
 function showToast(text) {
   if (!toast) return;
@@ -17,12 +18,34 @@ function isActivator(e) {
   return e.key === "Enter" || e.key === " ";
 }
 
+function rememberSection(sec, collapsed) {
+  const id = sec.dataset.sectionId;
+  if (!id) return;
+  state.collapsed = state.collapsed || {};
+  state.collapsed[id] = collapsed;
+  vscode.setState(state);
+}
+
+function applySectionState() {
+  const collapsed = state.collapsed || {};
+  for (const sec of document.querySelectorAll(".section[data-section-id]")) {
+    const id = sec.dataset.sectionId;
+    if (!id || typeof collapsed[id] !== "boolean") continue;
+    sec.classList.toggle("collapsed", collapsed[id]);
+    const head = sec.querySelector(".sec-head");
+    if (head) head.setAttribute("aria-expanded", collapsed[id] ? "false" : "true");
+  }
+}
+
+applySectionState();
+
 document.addEventListener("click", (e) => {
   const head = e.target.closest(".sec-head");
   if (head && head.parentElement) {
     const sec = head.parentElement;
     const collapsed = sec.classList.toggle("collapsed");
     head.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    rememberSection(sec, collapsed);
     return;
   }
 
