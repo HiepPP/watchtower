@@ -1,6 +1,6 @@
 ---
 name: watchtower
-description: Use when creating, updating, archiving, reviewing, implementing, or asking what to do next on repo-local TODO plans in watchtower/NEXT.md. implement reads NEXT.md, then loads only current TODO, shared context, and declared dependency outcomes. Also triggers on "what next?" during repo work.
+description: Use when creating, updating, archiving, reviewing, implementing, or asking what to do next on repo-local TODO plans in watchtower/NEXT.md. implement reads NEXT.md, then loads only current TODO specs and required shared context; outcome files are opt-in only. Also triggers on "what next?" during repo work.
 argument-hint: "[new|progress|archive|verify|next|implement|implement team] [--repo path] [summary]"
 disable-model-invocation: false
 user-invocable: true
@@ -15,7 +15,7 @@ Maintain repo-local planning files. Keep `watchtower/NEXT.md` as active manifest
 
 Use when the user invokes `/watchtower` or asks to write, revise, archive, review, verify, or implement a repo-local NEXT plan. Also use for natural-language "what next?" / "what's next?" / "next steps?" asks while in a repo: read `watchtower/NEXT.md`, gauge Tracker progress, and propose next action.
 
-Only `implement` writes code. `new`, `progress`, `archive`, and `next` never write code. `verify` runs checks and records results in TODO outcomes.
+Only `implement` writes code. `new`, `progress`, `archive`, and `next` never write code. `verify` runs checks and records results in TODO outcome sidecar files.
 
 ## Arguments
 
@@ -24,11 +24,11 @@ Use `$ARGUMENTS` to classify request. Details links to mode flow; dash means tab
 | Argument | Purpose | Mutates | Details |
 |----------|---------|---------|---------|
 | `new` | Create fresh manifest plan or add TODO files to active plan | `NEXT.md` + `CONTEXT.md` + `todos/` | [Author Plan](#author-plan) |
-| `progress` | Mark TODO status or add session notes | `NEXT.md` Tracker + TODO Outcome | [Progress](#progress) |
+| `progress` | Mark TODO status or add session notes | `NEXT.md` Tracker + TODO outcome sidecar | [Progress](#progress) |
 | `archive` | Archive active manifest, context, TODO files, and any legacy verify file | moves active plan files to `watchtower/archive/` | [Archive](#archive) |
-| `verify` | Run checks from TODO files, record each result, promote passing TODOs to `DONE` | TODO Outcome + Tracker Status | [Run Verification](#run-verification) |
+| `verify` | Run checks from TODO files, record each result, promote passing TODOs to `DONE` | TODO outcome sidecar + Tracker Status | [Run Verification](#run-verification) |
 | `next` | Read active plan and propose next action from Tracker | nothing | [Propose Next](#propose-next) |
-| `implement` | Load current TODO plus required context and dependency outcomes, then build it sequentially in this session | code + plan files | [Implement](#implement) |
+| `implement` | Load current TODO specs plus required context, then build sequentially in this session | code + plan files + TODO outcome sidecars | [Implement](#implement) |
 | `implement team` | Same as `implement`, but build with a team of subagents, then auto shut down every spawned background agent | code + plan files | [Implement](#implement) |
 
 `--repo path` is a modifier, not a mode: use given repository instead of current git root.
@@ -40,7 +40,7 @@ Arguments may chain modes in one call, for example `new and implement`, or `arch
 ## Workflow
 
 1. Resolve repo root. Use `--repo path` when given; else current git root. Prove it with `git -C <path> rev-parse --show-toplevel`. Stop if target repo cannot be proven.
-2. For `new`, `progress`, `archive`, and `verify`, read before writing: `.gitignore`, `watchtower/NEXT.md` if present, `watchtower/CONTEXT.md` if present, `watchtower/NEXT.VERIFY.md` if present, TODO filenames under `watchtower/todos/`, and archive filenames under `watchtower/archive/`. For `implement`, use the minimal load set in Implement. For `next`, skip this broad read; Propose Next owns minimal load.
+2. For `new`, `progress`, `archive`, and `verify`, read before writing: `.gitignore`, `watchtower/NEXT.md` if present, `watchtower/CONTEXT.md` if present, `watchtower/NEXT.VERIFY.md` if present, TODO filenames and outcome filenames under `watchtower/todos/`, and archive filenames under `watchtower/archive/`. For `implement`, use the minimal load set in Implement. For `next`, skip this broad read; Propose Next owns minimal load.
 3. Do not add `/watchtower/` to `.gitignore`. If `watchtower/` is already ignored, keep current state. If tracked, keep tracked.
 4. Detect plan shape before routing:
    - New format: `watchtower/NEXT.md` Tracker has `Spec`, `Deps`, and `Context` columns. TODO detail lives under `watchtower/todos/`.
@@ -64,7 +64,7 @@ Honor these in `new` and `implement`.
 - Think first. State assumptions. If plan is unclear, or simpler approach exists, stop and ask with `AskUserQuestion`. Do not guess.
 - Keep it simple. Build minimum TODO needs. No speculative features, abstractions, or config TODO did not ask for.
 - Stay surgical. Touch only what TODO needs. Match existing style. Do not refactor unrelated code. Remove only orphans from this change.
-- Drive to verified goal. Each TODO has checkable `## Verify` section. Loop until it passes, then record real results in `## Outcome`.
+- Drive to verified goal. Each TODO has checkable `## Verify` section. Loop until it passes, then record real results in its `TODO-NNN-outcome.md` sidecar.
 
 ## Author Plan
 
@@ -75,10 +75,11 @@ Use for `new`. Create fresh plan when none exists, or add TODOs to active plan. 
    - `watchtower/NEXT.md` present with Status `ARCHIVED` or empty Tracker -> CREATE.
    - `watchtower/NEXT.md` present with every Tracker row `DONE` -> ask with `AskUserQuestion`: extend this plan (ADD), or archive it and start fresh (`archive` then CREATE). Do not guess.
    - `watchtower/NEXT.md` present with open TODOs -> ADD.
-2. CREATE: write `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, and one file per TODO under `watchtower/todos/`. Do not create `watchtower/NEXT.VERIFY.md` for new-format plans. Assign plan `Slug:` once: `YYYYMMDD-kebab-title`, for example `20260619-arcade-mascot-spotlight`. Archive reuses this slug.
-3. ADD: append only requested Tracker rows to `watchtower/NEXT.md` and create matching `watchtower/todos/TODO-NNN-kebab-title.md` files. If added TODOs broaden work past current Title, update Title and shared context only as needed.
-4. Open changed files in VS Code (Open In VS Code) after writing them.
-5. Legacy plan ADD: add only when existing legacy plan already has clear inline TODO format. If verify mapping is unclear or `watchtower/NEXT.VERIFY.md` is missing, stop and ask before changing legacy files. Do not migrate unless user asks.
+2. CREATE: before writing files, derive plan `Slug:` from current date plus final plan title: `YYYYMMDD-kebab-title`, for example `20260619-arcade-mascot-spotlight`. Write that exact `Slug:` into `watchtower/NEXT.md` under `## Current Active Plan`. Never create new-format `watchtower/NEXT.md` without `Slug:`. Do not defer slug choice to archive time.
+3. CREATE: write `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, one spec file per TODO under `watchtower/todos/`, and one matching `TODO-NNN-outcome.md` sidecar per TODO. Do not create `watchtower/NEXT.VERIFY.md` for new-format plans. Archive reuses existing `Slug:` only.
+4. ADD: append only requested Tracker rows to `watchtower/NEXT.md` and create matching `watchtower/todos/TODO-NNN-kebab-title.md` plus `watchtower/todos/TODO-NNN-outcome.md` files. If added TODOs broaden work past current Title, update Title and shared context only as needed. If active new-format plan lacks `Slug:`, stop and repair metadata before adding TODO rows.
+5. Open changed files in VS Code (Open In VS Code) after writing them.
+6. Legacy plan ADD: add only when existing legacy plan already has clear inline TODO format. If verify mapping is unclear or `watchtower/NEXT.VERIFY.md` is missing, stop and ask before changing legacy files. Do not migrate unless user asks.
 
 ## Open In VS Code
 
@@ -87,7 +88,7 @@ Runs after `new` writes specs. Opens changed plan files in current VS Code windo
 1. Build one `-g` target per file with absolute paths:
    - `watchtower/NEXT.md` at line 1 on CREATE, else added Tracker row line.
    - `watchtower/CONTEXT.md` at line 1 on CREATE, or on ADD only when context changed.
-   - Each new TODO file at line 1.
+   - Each new TODO spec file at line 1.
 2. Check `command -v code`. If present, run one command per target:
 
 ```bash
@@ -119,20 +120,20 @@ Use for `verify`. Run checks, record live results, and promote passing TODOs. Wr
 1. New format: read `watchtower/NEXT.md`, then read only TODO files that need verification from Tracker `Spec` column. Run each TODO's `## Verify` checks. Run `## Plan Verify` in `watchtower/NEXT.md` when present.
 2. Legacy format: if `watchtower/NEXT.VERIFY.md` exists, use existing checklist exactly as written. Run each checkbox in order and record live results there. If legacy inline plan lacks `NEXT.VERIFY.md`, verify from inline TODO `Expected result` and `## Verification` only when those sections are clear. If not clear, stop and ask.
 3. Run each check with real output: execute command, or do manual/browser check. Do not use recall.
-4. New format: write results into each TODO file's `## Outcome`. Set `Status: DONE` only when all checks pass. Include `Changed`, `Contract`, and `Verified` entries for each done TODO.
-5. Tracker update: for each TODO whose Outcome status is `DONE`, set Tracker Status to `DONE` in `watchtower/NEXT.md`. Leave rows unchanged if any check failed or was skipped. Then recompute plan-level `Status:` header.
+4. New format: write results into each TODO's outcome sidecar: `watchtower/todos/TODO-NNN-outcome.md`, where `NNN` matches the TODO id. Set `Status: DONE` only when all checks pass. Include `Changed`, `Contract`, and `Verified` entries for each done TODO. Do not append outcome text to the TODO spec file.
+5. Tracker update: for each TODO whose outcome sidecar status is `DONE`, set Tracker Status to `DONE` in `watchtower/NEXT.md`. Leave rows unchanged if any check failed or was skipped. Then recompute plan-level `Status:` header.
 6. Report passed / failed / skipped, and which TODOs were promoted to `DONE`. If any pre-commit-gate or Plan Verify check failed, stop and surface it.
 
 ## Progress
 
 Use for `progress`. Update plan state only. Do not run implementation work here.
 
-1. Read `watchtower/NEXT.md` and selected TODO file when new format is active.
+1. Read `watchtower/NEXT.md` and selected TODO file when new format is active. Read matching outcome sidecar only when changing status to `DONE` or when user explicitly asks for outcome context.
 2. Update Tracker `Status` and `Notes` for named TODOs only. Allowed statuses: `TODO`, `IN PROGRESS`, `BLOCKED`, `DONE`.
-3. For new format, update matching TODO `## Outcome` when status changes:
+3. For new format, update matching `watchtower/todos/TODO-NNN-outcome.md` when status changes:
    - `IN PROGRESS`: set `Status: IN PROGRESS`; add one short progress note only when useful.
    - `BLOCKED`: set `Status: BLOCKED`, add `Blocked:` with reason and next decision needed.
-   - `DONE`: only set when verification evidence is already present in `## Outcome`. Otherwise use `verify`.
+   - `DONE`: only set when verification evidence is already present in the outcome sidecar. Otherwise use `verify`.
    - `TODO`: clear only stale progress notes that belong to this plan update.
 4. Recompute plan-level `Status:` after status changes. Keep `ACTIVE` while any Tracker row is not `DONE`.
 5. Do not edit unrelated TODO files, context, code, or archive files.
@@ -151,13 +152,14 @@ Two execution modes, same goal and same steps 1-9:
   - Subagents honor the same constraints: scope, impact analysis, no commit, preserve unrelated work.
 
 1. Read latest `watchtower/NEXT.md`. If absent, report no active plan and offer to start one with `new`. Stop.
-2. Read project rules first: `AGENTS.md` or `AGENTS.md`, `DESIGN.md`, and any `.cursor/rules/` that apply. Honor every working rule, validation matrix, and DESIGN.md-first constraint.
+2. Read project rules first: `AGENTS.md` or `CLAUDE.md`, `DESIGN.md`, and any `.cursor/rules/` that apply. Honor every working rule, validation matrix, and DESIGN.md-first constraint.
 3. Parse `## Tracker` table. Pick seed row by priority: lowest-Order IN PROGRESS, else lowest-Order TODO. If seed row Group is not `standalone`, the current work set is every non-DONE row with that same Group, sorted by Order. If Group is `standalone`, current work set is the seed row only.
 4. Reconcile plan vs reality before coding. If plan state, target, or TODO conflicts with shipped work, or an Open Decisions item is unresolved, stop and surface it with `AskUserQuestion`. Do not overwrite shipped work plan misdescribes.
 5. New format load set:
    - Read each current work set row's `Spec` file in full.
    - Read `watchtower/CONTEXT.md` once when any current work set row's `Context` column requires it.
-   - For each current work set row's `Deps` entry, resolve TODO ids through Tracker `Spec`, then read only `## Outcome` from dependency TODO file. Do not read dependency `## Brief` unless current TODO explicitly requires it.
+   - For each current work set row's `Deps` entry, resolve TODO ids through Tracker `Spec` only to confirm dependency status and file identity. Do not read dependency outcome sidecars by default, even when they exist.
+   - Read outcome sidecars only when the user's `implement` prompt explicitly asks for them, for example "read outcomes", "use previous outcomes", or "synthesize from outcomes". If explicit, read only matching `watchtower/todos/TODO-NNN-outcome.md` files, never full dependency TODO specs unless the prompt also asks for them.
    - Do not read full TODO files for `DONE` rows.
 6. Legacy format load set: read inline TODO sections in Tracker order, skipping `DONE` items, using old flow.
 7. For current work set:
@@ -165,7 +167,7 @@ Two execution modes, same goal and same steps 1-9:
    - Run impact analysis required by project rules before editing a symbol, for example GitNexus `impact`. Warn user on HIGH or CRITICAL risk before proceeding. For edits with no symbol, like page template, CSS, asset, or docs, note that no symbol-level impact applies and proceed.
    - Read every file each TODO touches before editing. Never edit blind. Keep changes scoped to current work set.
    - Mark current work set rows `IN PROGRESS`, do work, then run each TODO's `## Verify` checks.
-   - Mark each row `DONE` only after its verification passes and `## Outcome` is written with `Status: DONE`, `Changed`, `Contract`, and `Verified`. Record blockers as `BLOCKED` with reason.
+   - Mark each row `DONE` only after its verification passes and matching `TODO-NNN-outcome.md` is written with `Status: DONE`, `Changed`, `Contract`, and `Verified`. Record blockers in the outcome sidecar as `BLOCKED` with reason.
 8. Run `## Plan Verify` commands in `watchtower/NEXT.md` when present. Fix failures before claiming done. Report real outcomes.
 9. Update Tracker statuses, plan-level `Status:` header, and `## Handoff` to reflect what shipped. Do not archive unless user asks.
 10. Do not commit or push unless user asks. If asked, follow repo commit flow and run required pre-commit checks, for example `gitnexus_detect_changes()`.
@@ -175,7 +177,8 @@ Two execution modes, same goal and same steps 1-9:
 
 - `watchtower/NEXT.md`: active manifest. Holds plan metadata, Tracker, dependency paths, Handoff, Archive, and optional `## Plan Verify`.
 - `watchtower/CONTEXT.md`: short shared context that applies across TODOs. Keep stable and brief.
-- `watchtower/todos/TODO-NNN-kebab-title.md`: full TODO spec. Holds `## Brief`, `## Verify`, and `## Outcome`.
+- `watchtower/todos/TODO-NNN-kebab-title.md`: full TODO spec. Holds `## Brief` and `## Verify`. It does not hold outcome text.
+- `watchtower/todos/TODO-NNN-outcome.md`: outcome sidecar. Holds status, changed facts, preserved/created contract, verification evidence, blockers, and handoff notes for TODO `NNN`.
 - `watchtower/NEXT.VERIFY.md`: legacy verify file only. Do not create for new-format plans.
 - `watchtower/archive/<slug>/NEXT.md`: archived manifest.
 - `watchtower/archive/<slug>/CONTEXT.md`: archived shared context when present.
@@ -208,7 +211,7 @@ Use this structure unless user gives more specific format. Write all prose per W
 - `## Current Active Plan` with Title, Slug, Status, Updated.
 - `## Tracker` table: one row per TODO, columns Order, TODO, Group, Status, Spec, Deps, Context, Notes.
 - `Spec` points to TODO file as markdown link, for example `[watchtower/todos/TODO-NNN-kebab-title.md](watchtower/todos/TODO-NNN-kebab-title.md)`.
-- `Deps` points to TODO ids or TODO files whose `## Outcome` must be read before work starts. Use `-` when none.
+- `Deps` points to TODO ids or TODO files that must be complete before work starts. Use `-` when none. `implement` does not read dependency outcome sidecars unless the user explicitly asks.
 - `Context` is usually `[watchtower/CONTEXT.md](watchtower/CONTEXT.md)` or `-`.
 - `## Plan Verify` list when cross-TODO checks exist.
 - `## Handoff` with next action.
@@ -225,11 +228,23 @@ Each TODO file is mandatory and contains, in order:
 1. H1 heading `# TODO-NNN Title`; first line includes `Group: <tag>`.
 2. `## Brief`: goal, logic/change chart or one-line change note, implementation steps, files, and ready-to-run Prompt when useful.
 3. `## Verify`: concrete commands or manual/browser checks with expected results.
-4. `## Outcome`: starts with `Status: TODO`; later mirrors Tracker status when status changes.
+4. No `## Outcome` section. Outcomes live only in `watchtower/todos/TODO-NNN-outcome.md`.
 
-When TODO is done, update `## Outcome` to:
+When TODO is created, create matching outcome sidecar `watchtower/todos/TODO-NNN-outcome.md`:
 
 ```markdown
+# TODO-NNN Outcome
+
+## Outcome
+
+Status: TODO
+```
+
+When TODO is done, update only the outcome sidecar to:
+
+```markdown
+# TODO-NNN Outcome
+
 ## Outcome
 
 Status: DONE
@@ -254,17 +269,19 @@ Brief rules:
 6. `Expected result:` observable outcomes that prove TODO is done.
 7. `Prompt:` fenced `text` block with exact prompt to hand implementer or agent for this TODO. If installed skill fits this TODO, name it here.
 
-Do not emit TODO missing number and group, goal, how, files, expected result, prompt, verify, or outcome. Mermaid chart is required except for doc-only or single-line TODO.
+Do not emit TODO missing number and group, goal, how, files, expected result, prompt, verify, or matching outcome sidecar. Mermaid chart is required except for doc-only or single-line TODO.
+Do not put outcome prose in TODO spec files. Keep specs clean so future `implement` runs can read briefs without inheriting old result noise.
 
 ## Archive
 
-Use for `archive`. Archive active plan files together under plan slug. Do not delete archive files.
+Use for `archive`. Archive active plan files together under existing plan slug. Do not delete archive files. Do not infer, derive, or guess slug during archive.
 
-1. Read `Slug:` from `watchtower/NEXT.md`. Build archive directory `watchtower/archive/<slug>/`. If it exists, add `-HHMM` to avoid overwrite.
-2. Before moving files, update `watchtower/NEXT.md`: set plan-level `Status: ARCHIVED`, set `Updated:` to current date, and append `- Archived: <YYYY-MM-DD> -> watchtower/archive/<slug>/` under `## Archive`.
-3. Move `watchtower/NEXT.md`, `watchtower/CONTEXT.md` if present, and `watchtower/todos/` if present into that archive directory.
-4. If `watchtower/NEXT.VERIFY.md` exists, treat it as legacy and archive it in same directory.
-5. Do not remove old archive directories. Do not create fresh plan unless user also asked for `new`.
+1. Read `Slug:` from `watchtower/NEXT.md`. If `Slug:` is missing or empty, stop before moving files and report invalid active plan metadata. Do not derive slug from title, date, folder, or H1 during archive.
+2. Build archive directory `watchtower/archive/<slug>/`. If it exists, add `-HHMM` to avoid overwrite.
+3. Before moving files, update `watchtower/NEXT.md`: set plan-level `Status: ARCHIVED`, set `Updated:` to current date, and append `- Archived: <YYYY-MM-DD> -> watchtower/archive/<slug>/` under `## Archive`.
+4. Move `watchtower/NEXT.md`, `watchtower/CONTEXT.md` if present, and `watchtower/todos/` if present into that archive directory.
+5. If `watchtower/NEXT.VERIFY.md` exists, treat it as legacy and archive it in same directory.
+6. Do not remove old archive directories. Do not create fresh plan unless user also asked for `new`.
 
 ## Rules
 
@@ -273,11 +290,15 @@ Use for `archive`. Archive active plan files together under plan slug. Do not de
 - Always write plan files in English, even when user prompts in Vietnamese or any other language.
 - In plan prose, lists, and tables, write file references as markdown links. Do not leave file paths as plain text or inline code unless inside command blocks, file tree blocks, or exact command examples.
 - `new` does not create `watchtower/NEXT.VERIFY.md` for new-format plans.
+- `new` MUST assign and write `Slug:` during CREATE. Archive later reuses that exact slug.
 - `new` never archives. To start fresh unrelated plan while one is active, run `archive` first, then `new`.
 - After `new` writes or updates specs, open changed plan files in VS Code with direct `code -r -g` commands. If `code` is missing, print fallback commands. No other mode opens VS Code.
-- `verify` promotes TODO to `DONE` only when all `## Verify` checks pass live and `## Outcome` is updated. It never sets `IN PROGRESS` or `BLOCKED`.
+- `verify` promotes TODO to `DONE` only when all `## Verify` checks pass live and the outcome sidecar is updated. It never sets `IN PROGRESS` or `BLOCKED`.
+- `verify` writes `## Outcome` in `watchtower/todos/TODO-NNN-outcome.md`, never in the TODO spec file.
+- `implement` does not read outcome sidecars by default, even when they exist. It reads them only when the user's implement prompt explicitly asks for outcome context.
 - `implement` builds sequentially in-session. `implement team` builds with subagents and MUST run Team Cleanup at the end: shut down every spawned background agent. Same-file work goes to one builder; never parallel-edit one file.
 - `archive` moves `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, `watchtower/todos/`, and any legacy `watchtower/NEXT.VERIFY.md` to `watchtower/archive/<slug>/`.
+- `archive` MUST NOT guess or derive slug. If `Slug:` is missing or empty, stop before moving files.
 - Before archiving legacy plan, if `watchtower/NEXT.VERIFY.md` has unchecked `## Pre-commit gate` item, warn user and offer to run it first. If user archives anyway, note open gate in recap.
 - `next` mode and "what next?" asks are read-only. Never edit NEXT files when only proposing.
 - Do not delete archive files.

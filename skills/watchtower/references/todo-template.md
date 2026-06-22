@@ -7,12 +7,14 @@ Rules: H1/H2/H3 only, no bold, no emojis. Do not create `watchtower/NEXT.VERIFY.
 ## File Tree
 
 ```text
-next/
+watchtower/
   NEXT.md
   CONTEXT.md
   todos/
     TODO-001-short-title.md
+    TODO-001-outcome.md
     TODO-002-short-title.md
+    TODO-002-outcome.md
   archive/
     <slug>/
       NEXT.md
@@ -28,7 +30,7 @@ next/
 ## Current Active Plan
 
 - Title: <plan title>
-- Slug: <YYYYMMDD-kebab-title> (assigned once at create; archive step reuses it)
+- Slug: <YYYYMMDD-kebab-title> (required; assigned once at create; archive reuses exact value)
 - Status: <ACTIVE | DONE | ARCHIVED>
 - Updated: <YYYY-MM-DD>
 
@@ -39,7 +41,7 @@ One row per TODO. Group ties together items that ship as one transaction.
 | Order | TODO | Group | Status | Spec | Deps | Context | Notes |
 |-------|------|-------|--------|------|------|---------|-------|
 | 1 | TODO-001 <short title> | A | TODO | [watchtower/todos/TODO-001-short-title.md](watchtower/todos/TODO-001-short-title.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | <one-line note> |
-| 2 | TODO-002 <short title> | A | TODO | [watchtower/todos/TODO-002-short-title.md](watchtower/todos/TODO-002-short-title.md) | TODO-001 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Read TODO-001 Outcome first. |
+| 2 | TODO-002 <short title> | A | TODO | [watchtower/todos/TODO-002-short-title.md](watchtower/todos/TODO-002-short-title.md) | TODO-001 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Depends on TODO-001. |
 | 3 | TODO-003 <short title> | standalone | TODO | [watchtower/todos/TODO-003-short-title.md](watchtower/todos/TODO-003-short-title.md) | - | - | <one-line note> |
 
 TODO Status labels: TODO, IN PROGRESS, BLOCKED, DONE.
@@ -132,6 +134,12 @@ Prompt:
 
 - <command or manual check> -> <expected result>
 - <command or manual check> -> <expected result>
+````
+
+## watchtower/todos/TODO-001-outcome.md
+
+````markdown
+# TODO-001 Outcome
 
 ## Outcome
 
@@ -141,6 +149,8 @@ Status: TODO
 ## TODO Outcome When Done
 
 ```markdown
+# TODO-001 Outcome
+
 ## Outcome
 
 Status: DONE
