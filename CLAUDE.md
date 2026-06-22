@@ -42,3 +42,16 @@ This project is indexed by GitNexus as **watchtower** (124 symbols, 260 relation
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
+
+## Mock TODO Data
+
+- Mock Watchtower data lives in `mock-todo/`.
+- When user says "need mock data" or "can mock data", copy `mock-todo/` contents into current `watchtower/` folder.
+- Create `watchtower/` if absent.
+- Do not overwrite existing `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, or `watchtower/todos/` without explicit user approval.
+- Use this shape when target is absent or already cleared:
+
+```bash
+mkdir -p watchtower
+cp -R mock-todo/. watchtower/
+```
