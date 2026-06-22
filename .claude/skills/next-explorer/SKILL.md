@@ -1,5 +1,5 @@
 ---
-name: next-todo
+name: next-explorer
 description: Use when creating, updating, archiving, reviewing, implementing, or asking what to do next on repo-local TODO plans in next/NEXT.md. implement reads NEXT.md, then loads only current TODO, shared context, and declared dependency outcomes. Also triggers on "what next?" during repo work.
 argument-hint: "[new|progress|archive|verify|next|implement|implement team] [--repo path] [summary]"
 disable-model-invocation: false
@@ -13,7 +13,7 @@ Maintain repo-local planning files. Keep `next/NEXT.md` as active manifest, `nex
 
 ## When to Use
 
-Use when the user invokes `$next-todo` or asks to write, revise, archive, review, verify, or implement a repo-local NEXT plan. Also use for natural-language "what next?" / "what's next?" / "next steps?" asks while in a repo: read `next/NEXT.md`, gauge Tracker progress, and propose next action.
+Use when the user invokes `$next-explorer` or asks to write, revise, archive, review, verify, or implement a repo-local NEXT plan. Also use for natural-language "what next?" / "what's next?" / "next steps?" asks while in a repo: read `next/NEXT.md`, gauge Tracker progress, and propose next action.
 
 Only `implement` writes code. `new`, `progress`, `archive`, and `next` never write code. `verify` runs checks and records results in TODO outcomes.
 
@@ -35,7 +35,7 @@ Use `$ARGUMENTS` to classify request. Details links to mode flow; dash means tab
 
 `implement team` is `implement` plus the `team` keyword. Match `team`, `with team`, `team of subagent(s)`, or `subagent team` after `implement`. Without `team`, default to sequential `implement`.
 
-Arguments may chain modes in one call, for example `new and implement`, or `archive, and /commit`. Run them in order given. A `/command` token is an external skill, not a next-todo mode. Invoke it after next-todo modes finish.
+Arguments may chain modes in one call, for example `new and implement`, or `archive, and /commit`. Run them in order given. A `/command` token is an external skill, not a next-explorer mode. Invoke it after next-explorer modes finish.
 
 ## Workflow
 
