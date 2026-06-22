@@ -1,0 +1,71 @@
+{
+  "name": "next-explorer",
+  "displayName": "NEXT Explorer",
+  "description": "Show the active next-todo plan from a workspace next/ directory as a status tree.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:next/NEXT.md"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "nextExplorer",
+          "title": "NEXT",
+          "icon": "media/next.svg"
+        }
+      ]
+    },
+    "views": {
+      "nextExplorer": [
+        {
+          "id": "nextExplorer.tree",
+          "name": "Plan",
+          "contextualTitle": "NEXT"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "nextExplorer.refresh",
+        "title": "NEXT: Refresh Plan",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "nextExplorer.openNext",
+        "title": "NEXT: Open NEXT.md"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "nextExplorer.refresh",
+          "when": "view == nextExplorer.tree",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc --noEmit && node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "test": "node --experimental-strip-types --test 'test/*.ts'",
+    "package": "npm run compile && vsce package --allow-missing-repository --skip-license"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}
