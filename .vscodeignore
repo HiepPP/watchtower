@@ -1,7 +1,12 @@
 .vscode/**
+.claude/**
+.gitnexus/**
+watchtower/**
 src/**
 test/**
 node_modules/**
+AGENTS.md
+CLAUDE.md
 esbuild.mjs
 tsconfig.json
 **/*.map

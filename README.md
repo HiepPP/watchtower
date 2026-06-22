@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](#license)
 
-A read-only VS Code sidebar that shows your workspace's active Watchtower plan as a live status tree.
+A read-only VS Code sidebar that shows your workspace's Watchtower plan files as a simple tree.
 
 Watchtower reads the `watchtower/` directory and never edits your plan files. It gives you a quick view of plan progress, TODO status, and past plans without opening Markdown by hand.
 
@@ -21,7 +21,6 @@ Watchtower reads the `watchtower/` directory and never edits your plan files. It
 - [Using The /watchtower Skill](#using-the-watchtower-skill)
 - [Expected Plan Layout](#expected-plan-layout)
 - [Commands](#commands)
-- [Status Icons](#status-icons)
 - [Architecture](#architecture)
 - [Develop](#develop)
 - [Build and Package](#build-and-package)
@@ -30,11 +29,9 @@ Watchtower reads the `watchtower/` directory and never edits your plan files. It
 
 ## Features
 
-- Shows the active plan from `watchtower/NEXT.md`: title, plan status, and a done/total count.
-- Lists one node per Tracker TODO with a status icon (TODO, IN PROGRESS, BLOCKED, DONE).
-- Expands a TODO to open its spec file or jump to its Brief, Verify, or Outcome section.
-- Prefers the spec file's Outcome `Status:` over the Tracker status when both exist.
-- Shows a collapsed Archive section listing past plans under `watchtower/archive/`.
+- Shows `NEXT.md`, `CONTEXT.md`, and a `TODOS` folder.
+- Lists one file node per Tracker TODO under `TODOS`.
+- Opens Markdown files in rendered preview by default.
 - Refreshes on its own when any file under `watchtower/` changes.
 - Read-only by design. It never writes to your plan files.
 
@@ -44,11 +41,9 @@ The `/watchtower` skill keeps plans as plain Markdown in a `watchtower/` directo
 
 | Without the extension | With Watchtower |
 |---|---|
-| Open `NEXT.md` and read the table by hand | See the plan and its TODOs in the sidebar |
-| Guess current progress | Read a done/total count up top |
-| Hunt for a spec file path | Click a TODO to open its spec |
-| Scroll to find a section | Jump straight to Brief, Verify, or Outcome |
-| Lose track of finished plans | Browse them under the Archive node |
+| Open `NEXT.md` and read paths by hand | See `NEXT.md`, `CONTEXT.md`, and `TODOS` in the sidebar |
+| Hunt for a spec file path | Expand `TODOS` and click the full TODO filename |
+| Open Markdown source by mistake | Clicks open rendered preview by default |
 
 ## Requirements
 
@@ -73,15 +68,14 @@ Once installed, the Watchtower icon appears in the Activity Bar of any workspace
 
 1. Open a workspace that has a `watchtower/NEXT.md` file.
 2. Click the Watchtower icon in the Activity Bar.
-3. The Plan view shows the active plan, its TODOs, and an Archive section.
+3. The Plan view shows `NEXT.md`, `CONTEXT.md`, and `TODOS`.
 
 What each node does:
 
-- Plan node: click to open `watchtower/NEXT.md`. The description shows status and progress, like `ACTIVE - 2/4 done`.
-- TODO node: click to open its spec file. The tooltip shows status, group, deps, and notes.
-- spec child: opens the TODO's spec file.
-- Brief / Verify / Outcome child: jumps to that section inside the spec file.
-- Archive node: expand to browse past plans from `watchtower/archive/`.
+- `NEXT.md`: previews `watchtower/NEXT.md`.
+- `CONTEXT.md`: previews `watchtower/CONTEXT.md`.
+- `TODOS`: expands to TODO file nodes.
+- `TODO-001-...md`, `TODO-nnn-...md`: preview each TODO spec file.
 
 If a workspace has a `watchtower/` folder but no `watchtower/NEXT.md`, the view shows `No active plan in watchtower/`.
 
@@ -165,19 +159,9 @@ Notes on parsing:
 | `watchtower.refresh` | Watchtower: Refresh Plan | Refresh icon in the view title bar |
 | `watchtower.openNext` | Watchtower: Open NEXT.md | Command Palette |
 
+Tree clicks open Markdown files in the rendered preview by default.
+
 The view also refreshes on its own when files under `watchtower/` change, so manual refresh is rarely needed.
-
-## Status Icons
-
-| Status | Icon | Meaning |
-|---|---|---|
-| TODO | outline circle | Not started |
-| IN PROGRESS | sync (blue) | Being worked on |
-| BLOCKED | error (red) | Stuck on a blocker |
-| DONE | check (green) | Finished |
-| Plan ACTIVE | play circle | Plan in progress |
-| Plan DONE | check-all | Plan finished |
-| Plan ARCHIVED | archive | Plan archived |
 
 ## Architecture
 
@@ -195,11 +179,9 @@ WatchtowerTreeProvider  -->  readPlan(watchtower/NEXT.md)
   |                       v
   |                  parsePlanContent()  reads header + Tracker table
   |                       |
-  |                       v
-  |                  per TODO: readTodoFile(spec)  reads Brief/Verify/Outcome
   |
   v
-Tree nodes:  Plan  ->  TODOs  ->  spec + sections,  plus  Archive
+Tree nodes:  NEXT.md, CONTEXT.md, TODOS  ->  TODO files
   ^
   |
 File watcher on watchtower/**  -->  provider.refresh()  on change/create/delete

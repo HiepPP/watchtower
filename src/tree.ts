@@ -1,21 +1,15 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import * as vscode from "vscode";
-import {
-  type ArchivePlan,
-  type Plan,
-  type PlanStatus,
-  type Section,
-  type Todo,
-  type TodoStatus,
-} from "./model.ts";
-import { listArchive, readPlan, readPlanAt, readTodoFile } from "./parser.ts";
+import { type Plan, type Todo } from "./model.ts";
+import { readPlan } from "./parser.ts";
 
-type NodeKind = "empty" | "plan" | "todo" | "spec" | "section" | "archiveRoot" | "archivePlan";
+type NodeKind = "empty" | "file" | "todosRoot" | "todo";
 
 interface NodeData {
+  fsPath?: string;
   plan?: Plan;
   todo?: Todo;
-  archive?: ArchivePlan;
-  sections?: Section[];
 }
 
 class WatchtowerNode extends vscode.TreeItem {
@@ -29,35 +23,14 @@ class WatchtowerNode extends vscode.TreeItem {
   }
 }
 
-function todoIcon(status: TodoStatus): vscode.ThemeIcon {
-  switch (status) {
-    case "DONE":
-      return new vscode.ThemeIcon("check", new vscode.ThemeColor("testing.iconPassed"));
-    case "IN_PROGRESS":
-      return new vscode.ThemeIcon("sync", new vscode.ThemeColor("charts.blue"));
-    case "BLOCKED":
-      return new vscode.ThemeIcon("error", new vscode.ThemeColor("testing.iconFailed"));
-    case "TODO":
-      return new vscode.ThemeIcon("circle-large-outline", new vscode.ThemeColor("descriptionForeground"));
-    default:
-      return new vscode.ThemeIcon("question");
-  }
-}
-
-function planIcon(status: PlanStatus): vscode.ThemeIcon {
-  switch (status) {
-    case "ACTIVE":
-      return new vscode.ThemeIcon("play-circle");
-    case "DONE":
-      return new vscode.ThemeIcon("check-all");
-    case "ARCHIVED":
-      return new vscode.ThemeIcon("archive");
-    default:
-      return new vscode.ThemeIcon("list-tree");
-  }
-}
-
 function openCommand(fsPath: string, line: number): vscode.Command {
+  if (fsPath.toLowerCase().endsWith(".md")) {
+    return {
+      command: "markdown.showPreview",
+      title: "Open Preview",
+      arguments: [vscode.Uri.file(fsPath)],
+    };
+  }
   return {
     command: "watchtower.open",
     title: "Open",
@@ -86,21 +59,9 @@ export class WatchtowerTreeProvider implements vscode.TreeDataProvider<Watchtowe
   getChildren(element?: WatchtowerNode): WatchtowerNode[] {
     if (!element) return this.rootNodes();
     switch (element.kind) {
-      case "plan": {
+      case "todosRoot": {
         const plan = element.data.plan;
-        return plan ? this.todoNodes(plan) : [];
-      }
-      case "todo": {
-        const todo = element.data.todo;
-        return todo ? this.todoChildren(todo, element.data.sections ?? []) : [];
-      }
-      case "archiveRoot":
-        return this.archiveNodes();
-      case "archivePlan": {
-        const archive = element.data.archive;
-        if (!archive) return [];
-        const plan = readPlanAt(archive.manifestPath);
-        return plan ? this.todoNodes(plan) : [];
+        return plan ? this.todoFileNodes(plan) : [];
       }
       default:
         return [];
@@ -109,102 +70,73 @@ export class WatchtowerTreeProvider implements vscode.TreeDataProvider<Watchtowe
 
   private rootNodes(): WatchtowerNode[] {
     const nodes: WatchtowerNode[] = [];
-    const plan = this.rootDir ? readPlan(this.rootDir) : null;
 
-    if (plan) {
-      const node = new WatchtowerNode(
-        "plan",
-        plan.title || "Watchtower",
+    if (!this.rootDir) {
+      nodes.push(
+        new WatchtowerNode("empty", "No active plan in watchtower/", vscode.TreeItemCollapsibleState.None),
+      );
+      return nodes;
+    }
+
+    const plan = readPlan(this.rootDir);
+    const watchtowerDir = path.join(this.rootDir, "watchtower");
+    const nextPath = path.join(watchtowerDir, "NEXT.md");
+    const contextPath = path.join(watchtowerDir, "CONTEXT.md");
+
+    if (fs.existsSync(nextPath)) {
+      nodes.push(this.fileNode("NEXT.md", nextPath));
+    }
+
+    if (fs.existsSync(contextPath)) {
+      nodes.push(this.fileNode("CONTEXT.md", contextPath));
+    }
+
+    if (plan && plan.todos.length > 0) {
+      const todosNode = new WatchtowerNode(
+        "todosRoot",
+        "TODOS",
         vscode.TreeItemCollapsibleState.Expanded,
         { plan },
       );
-      node.description = `${plan.status} - ${plan.doneCount}/${plan.totalCount} done`;
-      node.iconPath = planIcon(plan.status);
-      node.command = openCommand(plan.manifestPath, 0);
-      node.tooltip = `${plan.title}\nSlug: ${plan.slug}\nUpdated: ${plan.updated}`;
-      nodes.push(node);
-    } else {
+      todosNode.iconPath = new vscode.ThemeIcon("folder");
+      nodes.push(todosNode);
+    }
+
+    if (nodes.length === 0) {
       nodes.push(
         new WatchtowerNode("empty", "No active plan in watchtower/", vscode.TreeItemCollapsibleState.None),
       );
     }
 
-    const archives = this.rootDir ? listArchive(this.rootDir) : [];
-    if (archives.length > 0) {
-      const archiveRoot = new WatchtowerNode(
-        "archiveRoot",
-        `Archive (${archives.length})`,
-        vscode.TreeItemCollapsibleState.Collapsed,
-      );
-      archiveRoot.iconPath = new vscode.ThemeIcon("archive");
-      nodes.push(archiveRoot);
-    }
-
     return nodes;
   }
 
-  private todoNodes(plan: Plan): WatchtowerNode[] {
-    return plan.todos.map((todo) => {
-      const info = todo.specPath
-        ? readTodoFile(todo.specPath)
-        : { sections: [], outcomeStatus: null };
-      const status = info.outcomeStatus ?? todo.status;
-
-      const hasChildren = Boolean(todo.specPath) || info.sections.length > 0;
-      const node = new WatchtowerNode(
-        "todo",
-        `${todo.id} ${todo.title}`.trim(),
-        hasChildren
-          ? vscode.TreeItemCollapsibleState.Collapsed
-          : vscode.TreeItemCollapsibleState.None,
-        { todo, sections: info.sections },
-      );
-      node.iconPath = todoIcon(status);
-      if (todo.group && todo.group !== "standalone") node.description = todo.group;
-      node.tooltip = [
-        `Status: ${status}`,
-        `Group: ${todo.group || "-"}`,
-        `Deps: ${todo.deps || "-"}`,
-        todo.notes ? `Notes: ${todo.notes}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n");
-      if (todo.specPath) node.command = openCommand(todo.specPath, 0);
-      return node;
+  private fileNode(label: string, fsPath: string, data: NodeData = {}): WatchtowerNode {
+    const node = new WatchtowerNode("file", label, vscode.TreeItemCollapsibleState.None, {
+      ...data,
+      fsPath,
     });
+    node.resourceUri = vscode.Uri.file(fsPath);
+    node.iconPath = new vscode.ThemeIcon("file");
+    node.command = openCommand(fsPath, 0);
+    return node;
   }
 
-  private todoChildren(todo: Todo, sections: Section[]): WatchtowerNode[] {
-    const out: WatchtowerNode[] = [];
-    if (!todo.specPath) return out;
-
-    const spec = new WatchtowerNode("spec", "spec", vscode.TreeItemCollapsibleState.None);
-    spec.resourceUri = vscode.Uri.file(todo.specPath);
-    spec.iconPath = new vscode.ThemeIcon("file");
-    spec.command = openCommand(todo.specPath, 0);
-    out.push(spec);
-
-    for (const section of sections) {
-      const node = new WatchtowerNode("section", section.name, vscode.TreeItemCollapsibleState.None);
-      node.iconPath = new vscode.ThemeIcon("symbol-string");
-      node.command = openCommand(todo.specPath, section.line);
-      out.push(node);
-    }
-    return out;
-  }
-
-  private archiveNodes(): WatchtowerNode[] {
-    const archives = this.rootDir ? listArchive(this.rootDir) : [];
-    return archives.map((archive) => {
-      const node = new WatchtowerNode(
-        "archivePlan",
-        archive.slug,
-        vscode.TreeItemCollapsibleState.Collapsed,
-        { archive },
-      );
-      node.iconPath = new vscode.ThemeIcon("history");
-      node.command = openCommand(archive.manifestPath, 0);
-      return node;
-    });
+  private todoFileNodes(plan: Plan): WatchtowerNode[] {
+    return plan.todos
+      .filter((todo): todo is Todo & { specPath: string } => Boolean(todo.specPath))
+      .sort((a, b) => a.order - b.order)
+      .map((todo) => {
+        const fileName = path.basename(todo.specPath);
+        const node = new WatchtowerNode("todo", fileName, vscode.TreeItemCollapsibleState.None, {
+          fsPath: todo.specPath,
+          todo,
+        });
+        node.resourceUri = vscode.Uri.file(todo.specPath);
+        node.iconPath = new vscode.ThemeIcon("file");
+        node.command = openCommand(todo.specPath, 0);
+        node.tooltip = fileName;
+        return node;
+      });
   }
 }

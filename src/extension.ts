@@ -16,16 +16,29 @@ function findRootDir(): string | undefined {
 }
 
 async function openFileAtLine(fsPath: string, line: number): Promise<void> {
+  const uri = vscode.Uri.file(fsPath);
   try {
-    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(fsPath));
-    const editor = await vscode.window.showTextDocument(doc);
-    const safeLine = Math.max(0, Math.min(line, doc.lineCount - 1));
-    const pos = new vscode.Position(safeLine, 0);
-    editor.selection = new vscode.Selection(pos, pos);
-    editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.AtTop);
+    if (path.extname(fsPath).toLowerCase() === ".md") {
+      await vscode.commands.executeCommand("markdown.showPreview", uri);
+      return;
+    }
+    await openTextAtLine(uri, line);
   } catch {
-    void vscode.window.showWarningMessage(`Watchtower: cannot open ${fsPath}`);
+    try {
+      await openTextAtLine(uri, line);
+    } catch {
+      void vscode.window.showWarningMessage(`Watchtower: cannot open ${fsPath}`);
+    }
   }
+}
+
+async function openTextAtLine(uri: vscode.Uri, line: number): Promise<void> {
+  const doc = await vscode.workspace.openTextDocument(uri);
+  const editor = await vscode.window.showTextDocument(doc);
+  const safeLine = Math.max(0, Math.min(line, doc.lineCount - 1));
+  const pos = new vscode.Position(safeLine, 0);
+  editor.selection = new vscode.Selection(pos, pos);
+  editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.AtTop);
 }
 
 export function activate(context: vscode.ExtensionContext): void {
