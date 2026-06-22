@@ -11,10 +11,10 @@ Updated: 2026-06-21
 
 | Order | TODO | Group | Status | Spec | Deps | Context | Notes |
 |---:|---|---|---|---|---|---|---|
-| 1 | TODO-001 Build quiz state and markup shell | standalone | DONE | next/todos/TODO-001-build-quiz-state-and-markup-shell.md | - | CONTEXT.md | Done. Shell refactored to 3-zone gacha. Scoring/mascot/affiliate preserved. |
-| 2 | TODO-002 Build gacha visual shell | standalone | DONE | next/todos/TODO-002-build-gacha-visual-shell.md | TODO-001 | CONTEXT.md | Done. Red cabinet, marquee, light rails, knob, tray, dense CSS capsules match target closer. |
-| 3 | TODO-003 Add optional chamber enhancement | standalone | DONE | next/todos/TODO-003-add-optional-three-chamber.md | TODO-002 | CONTEXT.md | Done. CSS chamber source of truth. WebGL gated off until it can match shape. |
-| 4 | TODO-004 Integrate responsive flow and QA | standalone | BLOCKED | next/todos/TODO-004-integrate-responsive-flow-and-qa.md | TODO-003 | CONTEXT.md | Visual/responsive pass. Blocked by pre-existing audit product URL placeholders. |
+| 1 | TODO-001 Build quiz state and markup shell | standalone | DONE | watchtower/todos/TODO-001-build-quiz-state-and-markup-shell.md | - | CONTEXT.md | Done. Shell refactored to 3-zone gacha. Scoring/mascot/affiliate preserved. |
+| 2 | TODO-002 Build gacha visual shell | standalone | DONE | watchtower/todos/TODO-002-build-gacha-visual-shell.md | TODO-001 | CONTEXT.md | Done. Red cabinet, marquee, light rails, knob, tray, dense CSS capsules match target closer. |
+| 3 | TODO-003 Add optional chamber enhancement | standalone | DONE | watchtower/todos/TODO-003-add-optional-three-chamber.md | TODO-002 | CONTEXT.md | Done. CSS chamber source of truth. WebGL gated off until it can match shape. |
+| 4 | TODO-004 Integrate responsive flow and QA | standalone | BLOCKED | watchtower/todos/TODO-004-integrate-responsive-flow-and-qa.md | TODO-003 | CONTEXT.md | Visual/responsive pass. Blocked by pre-existing audit product URL placeholders. |
 
 ## Plan Verify
 
@@ -44,6 +44,6 @@ Next action: fix existing product affiliate URLs or approve separate audit-gate 
 
 ## Archive
 
-- Archived: 2026-06-21 -> next/archive/20260620-gacha-size-quiz/
-- Existing archive: next/archive/20260619-bo-suu-tap-game-console-redesign/
-- Existing archive: next/archive/20260619-bo-suu-tap-master-page/
+- Archived: 2026-06-21 -> watchtower/archive/20260620-gacha-size-quiz/
+- Existing archive: watchtower/archive/20260619-bo-suu-tap-game-console-redesign/
+- Existing archive: watchtower/archive/20260619-bo-suu-tap-master-page/

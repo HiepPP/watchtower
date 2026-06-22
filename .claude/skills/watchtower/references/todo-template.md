@@ -2,7 +2,7 @@
 
 Use these skeletons for new-format plans.
 
-Rules: H1/H2/H3 only, no bold, no emojis. Do not create `next/NEXT.VERIFY.md` for new plans. File refs in prose, lists, and tables must be markdown links.
+Rules: H1/H2/H3 only, no bold, no emojis. Do not create `watchtower/NEXT.VERIFY.md` for new plans. File refs in prose, lists, and tables must be markdown links.
 
 ## File Tree
 
@@ -20,7 +20,7 @@ next/
       todos/
 ```
 
-## next/NEXT.md
+## watchtower/NEXT.md
 
 ```markdown
 # NEXT
@@ -38,9 +38,9 @@ One row per TODO. Group ties together items that ship as one transaction.
 
 | Order | TODO | Group | Status | Spec | Deps | Context | Notes |
 |-------|------|-------|--------|------|------|---------|-------|
-| 1 | TODO-001 <short title> | A | TODO | [next/todos/TODO-001-short-title.md](next/todos/TODO-001-short-title.md) | - | [next/CONTEXT.md](next/CONTEXT.md) | <one-line note> |
-| 2 | TODO-002 <short title> | A | TODO | [next/todos/TODO-002-short-title.md](next/todos/TODO-002-short-title.md) | TODO-001 | [next/CONTEXT.md](next/CONTEXT.md) | Read TODO-001 Outcome first. |
-| 3 | TODO-003 <short title> | standalone | TODO | [next/todos/TODO-003-short-title.md](next/todos/TODO-003-short-title.md) | - | - | <one-line note> |
+| 1 | TODO-001 <short title> | A | TODO | [watchtower/todos/TODO-001-short-title.md](watchtower/todos/TODO-001-short-title.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | <one-line note> |
+| 2 | TODO-002 <short title> | A | TODO | [watchtower/todos/TODO-002-short-title.md](watchtower/todos/TODO-002-short-title.md) | TODO-001 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Read TODO-001 Outcome first. |
+| 3 | TODO-003 <short title> | standalone | TODO | [watchtower/todos/TODO-003-short-title.md](watchtower/todos/TODO-003-short-title.md) | - | - | <one-line note> |
 
 TODO Status labels: TODO, IN PROGRESS, BLOCKED, DONE.
 Plan-level Status header: ACTIVE while any row is open, DONE when all rows DONE, ARCHIVED after archive.
@@ -58,7 +58,7 @@ Plan-level Status header: ACTIVE while any row is open, DONE when all rows DONE,
 - None.
 ```
 
-## next/CONTEXT.md
+## watchtower/CONTEXT.md
 
 ```markdown
 # Plan Context
@@ -81,7 +81,7 @@ Plan-level Status header: ACTIVE while any row is open, DONE when all rows DONE,
 - [<path>](<path>) or `<command>`
 ```
 
-## next/todos/TODO-001-short-title.md
+## watchtower/todos/TODO-001-short-title.md
 
 ````markdown
 # TODO-001 <title>

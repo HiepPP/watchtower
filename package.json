@@ -1,7 +1,7 @@
 {
-  "name": "next-explorer",
-  "displayName": "NEXT Explorer",
-  "description": "Show the active next-todo plan from a workspace next/ directory as a status tree.",
+  "name": "watchtower",
+  "displayName": "Watchtower",
+  "description": "Show the active Watchtower plan from a workspace watchtower/ directory as a status tree.",
   "version": "0.1.0",
   "publisher": "local",
   "license": "MIT",
@@ -13,43 +13,43 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "workspaceContains:next/NEXT.md"
+    "workspaceContains:watchtower/NEXT.md"
   ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "nextExplorer",
-          "title": "NEXT",
-          "icon": "media/next.svg"
+          "id": "watchtower",
+          "title": "Watchtower",
+          "icon": "media/watchtower.svg"
         }
       ]
     },
     "views": {
-      "nextExplorer": [
+      "watchtower": [
         {
-          "id": "nextExplorer.tree",
+          "id": "watchtower.tree",
           "name": "Plan",
-          "contextualTitle": "NEXT"
+          "contextualTitle": "Watchtower"
         }
       ]
     },
     "commands": [
       {
-        "command": "nextExplorer.refresh",
-        "title": "NEXT: Refresh Plan",
+        "command": "watchtower.refresh",
+        "title": "Watchtower: Refresh Plan",
         "icon": "$(refresh)"
       },
       {
-        "command": "nextExplorer.openNext",
-        "title": "NEXT: Open NEXT.md"
+        "command": "watchtower.openNext",
+        "title": "Watchtower: Open NEXT.md"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "nextExplorer.refresh",
-          "when": "view == nextExplorer.tree",
+          "command": "watchtower.refresh",
+          "when": "view == watchtower.tree",
           "group": "navigation"
         }
       ]

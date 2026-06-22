@@ -22,7 +22,7 @@ export interface Plan {
   slug: string;
   status: PlanStatus;
   updated: string;
-  nextMdPath: string;
+  manifestPath: string;
   todos: Todo[];
   doneCount: number;
   totalCount: number;
@@ -30,7 +30,7 @@ export interface Plan {
 
 export interface ArchivePlan {
   slug: string;
-  nextMdPath: string;
+  manifestPath: string;
 }
 
 export function toTodoStatus(raw: string): TodoStatus {

@@ -1,24 +1,24 @@
-# NEXT Explorer
+# Watchtower
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/HiepPP/next-explorer)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/HiepPP/watchtower)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85.0-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](#license)
 
-A read-only VS Code sidebar that shows your workspace's active NEXT plan as a live status tree.
+A read-only VS Code sidebar that shows your workspace's active Watchtower plan as a live status tree.
 
-NEXT Explorer reads the `next/` directory and never edits your plan files. It gives you a quick view of plan progress, TODO status, and past plans without opening Markdown by hand.
+Watchtower reads the `watchtower/` directory and never edits your plan files. It gives you a quick view of plan progress, TODO status, and past plans without opening Markdown by hand.
 
-<!-- Demo: replace with a screenshot or GIF of the NEXT sidebar in action. -->
+<!-- Demo: replace with a screenshot or GIF of the Watchtower sidebar in action. -->
 
 ## Table of Contents
 
 - [Features](#features)
-- [Why NEXT Explorer](#why-next-explorer)
+- [Why Watchtower](#why-watchtower)
 - [Requirements](#requirements)
 - [Install](#install)
 - [Usage](#usage)
-- [Using The /next-explorer Skill](#using-the-next-explorer-skill)
+- [Using The /watchtower Skill](#using-the-watchtower-skill)
 - [Expected Plan Layout](#expected-plan-layout)
 - [Commands](#commands)
 - [Status Icons](#status-icons)
@@ -30,19 +30,19 @@ NEXT Explorer reads the `next/` directory and never edits your plan files. It gi
 
 ## Features
 
-- Shows the active plan from `next/NEXT.md`: title, plan status, and a done/total count.
+- Shows the active plan from `watchtower/NEXT.md`: title, plan status, and a done/total count.
 - Lists one node per Tracker TODO with a status icon (TODO, IN PROGRESS, BLOCKED, DONE).
 - Expands a TODO to open its spec file or jump to its Brief, Verify, or Outcome section.
 - Prefers the spec file's Outcome `Status:` over the Tracker status when both exist.
-- Shows a collapsed Archive section listing past plans under `next/archive/`.
-- Refreshes on its own when any file under `next/` changes.
+- Shows a collapsed Archive section listing past plans under `watchtower/archive/`.
+- Refreshes on its own when any file under `watchtower/` changes.
 - Read-only by design. It never writes to your plan files.
 
-## Why NEXT Explorer
+## Why Watchtower
 
-The `/next-explorer` skill keeps plans as plain Markdown in a `next/` directory. That is easy to edit but hard to scan at a glance.
+The `/watchtower` skill keeps plans as plain Markdown in a `watchtower/` directory. That is easy to edit but hard to scan at a glance.
 
-| Without the extension | With NEXT Explorer |
+| Without the extension | With Watchtower |
 |---|---|
 | Open `NEXT.md` and read the table by hand | See the plan and its TODOs in the sidebar |
 | Guess current progress | Read a done/total count up top |
@@ -53,79 +53,79 @@ The `/next-explorer` skill keeps plans as plain Markdown in a `next/` directory.
 ## Requirements
 
 - Visual Studio Code 1.85.0 or newer.
-- A workspace that contains a `next/NEXT.md` file. The extension only activates when this file is present.
+- A workspace that contains a `watchtower/NEXT.md` file. The extension only activates when this file is present.
 
 ## Install
 
 Install from a packaged VSIX:
 
 ```bash
-git clone https://github.com/HiepPP/next-explorer.git
-cd next-explorer
+git clone https://github.com/HiepPP/watchtower.git
+cd watchtower
 npm install
 npm run package
-code --install-extension next-explorer-0.1.0.vsix
+code --install-extension watchtower-0.1.0.vsix
 ```
 
-Once installed, the NEXT icon appears in the Activity Bar of any workspace that contains a `next/NEXT.md` file.
+Once installed, the Watchtower icon appears in the Activity Bar of any workspace that contains a `watchtower/NEXT.md` file.
 
 ## Usage
 
-1. Open a workspace that has a `next/NEXT.md` file.
-2. Click the NEXT icon in the Activity Bar.
+1. Open a workspace that has a `watchtower/NEXT.md` file.
+2. Click the Watchtower icon in the Activity Bar.
 3. The Plan view shows the active plan, its TODOs, and an Archive section.
 
 What each node does:
 
-- Plan node: click to open `next/NEXT.md`. The description shows status and progress, like `ACTIVE - 2/4 done`.
+- Plan node: click to open `watchtower/NEXT.md`. The description shows status and progress, like `ACTIVE - 2/4 done`.
 - TODO node: click to open its spec file. The tooltip shows status, group, deps, and notes.
 - spec child: opens the TODO's spec file.
 - Brief / Verify / Outcome child: jumps to that section inside the spec file.
-- Archive node: expand to browse past plans from `next/archive/`.
+- Archive node: expand to browse past plans from `watchtower/archive/`.
 
-If a workspace has a `next/` folder but no `next/NEXT.md`, the view shows `No active plan in next/`.
+If a workspace has a `watchtower/` folder but no `watchtower/NEXT.md`, the view shows `No active plan in watchtower/`.
 
-## Using The /next-explorer Skill
+## Using The /watchtower Skill
 
-`/next-explorer` creates and updates the plan files that this extension reads.
+`/watchtower` creates and updates the plan files that this extension reads.
 The skill writes Markdown. The VS Code extension only displays it.
 
 | Task | Command | Result |
 |---|---|---|
-| Create a plan | `/next-explorer new <summary>` | Creates `next/NEXT.md`, `next/CONTEXT.md`, and TODO specs |
-| Ask what to do next | `/next-explorer next` or `what next?` | Reads the Tracker and proposes the next TODO |
-| Update status | `/next-explorer progress <summary>` | Updates Tracker status and TODO Outcome notes |
-| Run checks | `/next-explorer verify` | Runs TODO checks and marks passing TODOs as `DONE` |
-| Build work | `/next-explorer implement` | Builds the current TODO and records the real result |
-| Build with agents | `/next-explorer implement team` | Splits safe work across subagents, then shuts them down |
-| Archive a plan | `/next-explorer archive` | Moves the active plan into `next/archive/<slug>/` |
+| Create a plan | `/watchtower new <summary>` | Creates `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, and TODO specs |
+| Ask what to do next | `/watchtower next` or `what next?` | Reads the Tracker and proposes the next TODO |
+| Update status | `/watchtower progress <summary>` | Updates Tracker status and TODO Outcome notes |
+| Run checks | `/watchtower verify` | Runs TODO checks and marks passing TODOs as `DONE` |
+| Build work | `/watchtower implement` | Builds the current TODO and records the real result |
+| Build with agents | `/watchtower implement team` | Splits safe work across subagents, then shuts them down |
+| Archive a plan | `/watchtower archive` | Moves the active plan into `watchtower/archive/<slug>/` |
 
 Common flow:
 
 ```bash
-/next-explorer new add billing settings cleanup
-/next-explorer next
-/next-explorer implement
-/next-explorer verify
-/next-explorer archive
+/watchtower new add billing settings cleanup
+/watchtower next
+/watchtower implement
+/watchtower verify
+/watchtower archive
 ```
 
 Use `--repo <path>` when your shell is not already inside the target repo:
 
 ```bash
-/next-explorer next --repo /path/to/project
+/watchtower next --repo /path/to/project
 ```
 
-The skill keeps active work in `next/NEXT.md`.
-It writes TODO details under `next/todos/`.
-It moves finished plans into `next/archive/`.
+The skill keeps active work in `watchtower/NEXT.md`.
+It writes TODO details under `watchtower/todos/`.
+It moves finished plans into `watchtower/archive/`.
 
 ## Expected Plan Layout
 
-The extension reads a fixed layout inside the `next/` directory.
+The extension reads a fixed layout inside the `watchtower/` directory.
 
 ```text
-next/
+watchtower/
   NEXT.md                 # active plan: header block + Tracker table
   todos/
     TODO-001-...md        # spec files with Brief / Verify / Outcome
@@ -148,24 +148,24 @@ Updated: 2026-06-21
 
 | Order | TODO | Group | Status | Spec | Deps | Context | Notes |
 |---|---|---|---|---|---|---|---|
-| 1 | TODO-001 Build the shell | standalone | DONE | next/todos/TODO-001-build-the-shell.md | - | CONTEXT.md | Done. |
+| 1 | TODO-001 Build the shell | standalone | DONE | watchtower/todos/TODO-001-build-the-shell.md | - | CONTEXT.md | Done. |
 ```
 
 Notes on parsing:
 
 - The Tracker header must contain the columns `Order`, `TODO`, and `Status`.
-- The Spec cell may be a plain path or a Markdown link. Only the file name is used, resolved against `next/todos/`.
+- The Spec cell may be a plain path or a Markdown link. Only the file name is used, resolved against `watchtower/todos/`.
 - A spec file may end with an `## Outcome` section that carries a `Status:` line. That status wins over the Tracker status.
-- The extension ignores any `NEXT.md` at the repo root. It reads the `next/` directory only.
+- The extension ignores any `NEXT.md` at the repo root. It reads the `watchtower/` directory only.
 
 ## Commands
 
 | Command | Title | Where |
 |---|---|---|
-| `nextExplorer.refresh` | NEXT: Refresh Plan | Refresh icon in the view title bar |
-| `nextExplorer.openNext` | NEXT: Open NEXT.md | Command Palette |
+| `watchtower.refresh` | Watchtower: Refresh Plan | Refresh icon in the view title bar |
+| `watchtower.openNext` | Watchtower: Open NEXT.md | Command Palette |
 
-The view also refreshes on its own when files under `next/` change, so manual refresh is rarely needed.
+The view also refreshes on its own when files under `watchtower/` change, so manual refresh is rarely needed.
 
 ## Status Icons
 
@@ -181,16 +181,16 @@ The view also refreshes on its own when files under `next/` change, so manual re
 
 ## Architecture
 
-The extension activates on a workspace that contains `next/NEXT.md`, builds a tree provider, and re-reads the plan whenever `next/` changes.
+The extension activates on a workspace that contains `watchtower/NEXT.md`, builds a tree provider, and re-reads the plan whenever `watchtower/` changes.
 
 ```text
-VS Code activates (workspaceContains:next/NEXT.md)
+VS Code activates (workspaceContains:watchtower/NEXT.md)
   |
   v
-activate()  -->  findRootDir()  picks the workspace folder with next/NEXT.md
+activate()  -->  findRootDir()  picks the workspace folder with watchtower/NEXT.md
   |
   v
-NextTreeProvider  -->  readPlan(next/NEXT.md)
+WatchtowerTreeProvider  -->  readPlan(watchtower/NEXT.md)
   |                       |
   |                       v
   |                  parsePlanContent()  reads header + Tracker table
@@ -202,7 +202,7 @@ NextTreeProvider  -->  readPlan(next/NEXT.md)
 Tree nodes:  Plan  ->  TODOs  ->  spec + sections,  plus  Archive
   ^
   |
-File watcher on next/**  -->  provider.refresh()  on change/create/delete
+File watcher on watchtower/**  -->  provider.refresh()  on change/create/delete
 ```
 
 | File | Responsibility |
@@ -220,7 +220,7 @@ npm run compile
 npm test
 ```
 
-Press F5 from the project folder to launch the Extension Development Host. Open a workspace with a `next/NEXT.md` file to see the tree.
+Press F5 from the project folder to launch the Extension Development Host. Open a workspace with a `watchtower/NEXT.md` file to see the tree.
 
 Use watch mode to rebuild on save:
 
@@ -234,10 +234,10 @@ npm run watch
 npm run package
 ```
 
-This type-checks, bundles with esbuild, and produces `next-explorer-0.1.0.vsix`. Install it with:
+This type-checks, bundles with esbuild, and produces `watchtower-0.1.0.vsix`. Install it with:
 
 ```bash
-code --install-extension next-explorer-0.1.0.vsix
+code --install-extension watchtower-0.1.0.vsix
 ```
 
 ## Contributing
@@ -253,4 +253,4 @@ Contributions are welcome.
 
 Released under the MIT License.
 
-[Back to top](#next-explorer)
+[Back to top](#watchtower)

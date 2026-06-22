@@ -70,7 +70,7 @@ function parseTracker(content: string, todosDir: string): Todo[] {
     const cells = splitRow(line);
     if (isSeparatorRow(cells)) continue;
 
-    // Columns are positional per the next-todo tracker schema:
+    // Columns are positional per the Watchtower tracker schema:
     // [0]=Order [1]=TODO [2]=Group [3]=Status [4]=Spec [5]=Deps [6]=Context(unused) [7]=Notes
     const [orderCell, todoCell, groupCell, statusCell, specCell, depsCell, , notesCell] = cells;
     const idMatch = (todoCell ?? "").match(/^(TODO-\d+)\s*(.*)$/);
@@ -90,9 +90,9 @@ function parseTracker(content: string, todosDir: string): Todo[] {
   return todos;
 }
 
-export function parsePlanContent(content: string, nextMdPath: string): Plan {
+export function parsePlanContent(content: string, manifestPath: string): Plan {
   const block = headerBlock(content);
-  const todosDir = path.join(path.dirname(nextMdPath), "todos");
+  const todosDir = path.join(path.dirname(manifestPath), "todos");
   const todos = parseTracker(content, todosDir);
   const doneCount = todos.filter((t) => t.status === "DONE").length;
 
@@ -101,7 +101,7 @@ export function parsePlanContent(content: string, nextMdPath: string): Plan {
     slug: field(block, "Slug"),
     status: toPlanStatus(field(block, "Status")),
     updated: field(block, "Updated"),
-    nextMdPath,
+    manifestPath,
     todos,
     doneCount,
     totalCount: todos.length,
@@ -150,14 +150,14 @@ function readFileSafe(filePath: string): string | null {
   }
 }
 
-export function readPlanAt(nextMdPath: string): Plan | null {
-  const content = readFileSafe(nextMdPath);
+export function readPlanAt(manifestPath: string): Plan | null {
+  const content = readFileSafe(manifestPath);
   if (content === null) return null;
-  return parsePlanContent(content, nextMdPath);
+  return parsePlanContent(content, manifestPath);
 }
 
 export function readPlan(rootDir: string): Plan | null {
-  return readPlanAt(path.join(rootDir, "next", "NEXT.md"));
+  return readPlanAt(path.join(rootDir, "watchtower", "NEXT.md"));
 }
 
 export function readTodoFile(specPath: string): {
@@ -170,7 +170,7 @@ export function readTodoFile(specPath: string): {
 }
 
 export function listArchive(rootDir: string): ArchivePlan[] {
-  const archiveDir = path.join(rootDir, "next", "archive");
+  const archiveDir = path.join(rootDir, "watchtower", "archive");
   let entries: fs.Dirent[];
   try {
     entries = fs.readdirSync(archiveDir, { withFileTypes: true });
@@ -180,9 +180,9 @@ export function listArchive(rootDir: string): ArchivePlan[] {
   const plans: ArchivePlan[] = [];
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
-    const nextMdPath = path.join(archiveDir, entry.name, "NEXT.md");
-    if (fs.existsSync(nextMdPath)) {
-      plans.push({ slug: entry.name, nextMdPath });
+    const manifestPath = path.join(archiveDir, entry.name, "NEXT.md");
+    if (fs.existsSync(manifestPath)) {
+      plans.push({ slug: entry.name, manifestPath });
     }
   }
   return plans.sort((a, b) => b.slug.localeCompare(a.slug));

@@ -18,7 +18,7 @@ interface NodeData {
   sections?: Section[];
 }
 
-class NextNode extends vscode.TreeItem {
+class WatchtowerNode extends vscode.TreeItem {
   constructor(
     public readonly kind: NodeKind,
     label: string,
@@ -59,13 +59,13 @@ function planIcon(status: PlanStatus): vscode.ThemeIcon {
 
 function openCommand(fsPath: string, line: number): vscode.Command {
   return {
-    command: "nextExplorer.open",
+    command: "watchtower.open",
     title: "Open",
     arguments: [fsPath, line],
   };
 }
 
-export class NextTreeProvider implements vscode.TreeDataProvider<NextNode> {
+export class WatchtowerTreeProvider implements vscode.TreeDataProvider<WatchtowerNode> {
   private readonly _onDidChange = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChange.event;
 
@@ -79,11 +79,11 @@ export class NextTreeProvider implements vscode.TreeDataProvider<NextNode> {
     this._onDidChange.dispose();
   }
 
-  getTreeItem(element: NextNode): vscode.TreeItem {
+  getTreeItem(element: WatchtowerNode): vscode.TreeItem {
     return element;
   }
 
-  getChildren(element?: NextNode): NextNode[] {
+  getChildren(element?: WatchtowerNode): WatchtowerNode[] {
     if (!element) return this.rootNodes();
     switch (element.kind) {
       case "plan": {
@@ -99,7 +99,7 @@ export class NextTreeProvider implements vscode.TreeDataProvider<NextNode> {
       case "archivePlan": {
         const archive = element.data.archive;
         if (!archive) return [];
-        const plan = readPlanAt(archive.nextMdPath);
+        const plan = readPlanAt(archive.manifestPath);
         return plan ? this.todoNodes(plan) : [];
       }
       default:
@@ -107,31 +107,31 @@ export class NextTreeProvider implements vscode.TreeDataProvider<NextNode> {
     }
   }
 
-  private rootNodes(): NextNode[] {
-    const nodes: NextNode[] = [];
+  private rootNodes(): WatchtowerNode[] {
+    const nodes: WatchtowerNode[] = [];
     const plan = this.rootDir ? readPlan(this.rootDir) : null;
 
     if (plan) {
-      const node = new NextNode(
+      const node = new WatchtowerNode(
         "plan",
-        plan.title || "NEXT",
+        plan.title || "Watchtower",
         vscode.TreeItemCollapsibleState.Expanded,
         { plan },
       );
       node.description = `${plan.status} - ${plan.doneCount}/${plan.totalCount} done`;
       node.iconPath = planIcon(plan.status);
-      node.command = openCommand(plan.nextMdPath, 0);
+      node.command = openCommand(plan.manifestPath, 0);
       node.tooltip = `${plan.title}\nSlug: ${plan.slug}\nUpdated: ${plan.updated}`;
       nodes.push(node);
     } else {
       nodes.push(
-        new NextNode("empty", "No active plan in next/", vscode.TreeItemCollapsibleState.None),
+        new WatchtowerNode("empty", "No active plan in watchtower/", vscode.TreeItemCollapsibleState.None),
       );
     }
 
     const archives = this.rootDir ? listArchive(this.rootDir) : [];
     if (archives.length > 0) {
-      const archiveRoot = new NextNode(
+      const archiveRoot = new WatchtowerNode(
         "archiveRoot",
         `Archive (${archives.length})`,
         vscode.TreeItemCollapsibleState.Collapsed,
@@ -143,7 +143,7 @@ export class NextTreeProvider implements vscode.TreeDataProvider<NextNode> {
     return nodes;
   }
 
-  private todoNodes(plan: Plan): NextNode[] {
+  private todoNodes(plan: Plan): WatchtowerNode[] {
     return plan.todos.map((todo) => {
       const info = todo.specPath
         ? readTodoFile(todo.specPath)
@@ -151,7 +151,7 @@ export class NextTreeProvider implements vscode.TreeDataProvider<NextNode> {
       const status = info.outcomeStatus ?? todo.status;
 
       const hasChildren = Boolean(todo.specPath) || info.sections.length > 0;
-      const node = new NextNode(
+      const node = new WatchtowerNode(
         "todo",
         `${todo.id} ${todo.title}`.trim(),
         hasChildren
@@ -174,18 +174,18 @@ export class NextTreeProvider implements vscode.TreeDataProvider<NextNode> {
     });
   }
 
-  private todoChildren(todo: Todo, sections: Section[]): NextNode[] {
-    const out: NextNode[] = [];
+  private todoChildren(todo: Todo, sections: Section[]): WatchtowerNode[] {
+    const out: WatchtowerNode[] = [];
     if (!todo.specPath) return out;
 
-    const spec = new NextNode("spec", "spec", vscode.TreeItemCollapsibleState.None);
+    const spec = new WatchtowerNode("spec", "spec", vscode.TreeItemCollapsibleState.None);
     spec.resourceUri = vscode.Uri.file(todo.specPath);
     spec.iconPath = new vscode.ThemeIcon("file");
     spec.command = openCommand(todo.specPath, 0);
     out.push(spec);
 
     for (const section of sections) {
-      const node = new NextNode("section", section.name, vscode.TreeItemCollapsibleState.None);
+      const node = new WatchtowerNode("section", section.name, vscode.TreeItemCollapsibleState.None);
       node.iconPath = new vscode.ThemeIcon("symbol-string");
       node.command = openCommand(todo.specPath, section.line);
       out.push(node);
@@ -193,17 +193,17 @@ export class NextTreeProvider implements vscode.TreeDataProvider<NextNode> {
     return out;
   }
 
-  private archiveNodes(): NextNode[] {
+  private archiveNodes(): WatchtowerNode[] {
     const archives = this.rootDir ? listArchive(this.rootDir) : [];
     return archives.map((archive) => {
-      const node = new NextNode(
+      const node = new WatchtowerNode(
         "archivePlan",
         archive.slug,
         vscode.TreeItemCollapsibleState.Collapsed,
         { archive },
       );
       node.iconPath = new vscode.ThemeIcon("history");
-      node.command = openCommand(archive.nextMdPath, 0);
+      node.command = openCommand(archive.manifestPath, 0);
       return node;
     });
   }

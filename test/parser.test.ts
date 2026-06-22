@@ -27,7 +27,7 @@ test("toPlanStatus maps known labels", () => {
 });
 
 test("parsePlanContent reads header and tracker", () => {
-  const plan = parsePlanContent(sampleNext, "/ws/next/NEXT.md");
+  const plan = parsePlanContent(sampleNext, "/ws/watchtower/NEXT.md");
   assert.equal(plan.title, "Gacha Size Quiz");
   assert.equal(plan.slug, "20260620-gacha-size-quiz");
   assert.equal(plan.status, "ARCHIVED");
@@ -48,14 +48,14 @@ test("parsePlanContent reads header and tracker", () => {
   assert.ok(first.notes.length > 0);
   assert.equal(
     first.specPath,
-    "/ws/next/todos/TODO-001-build-quiz-state-and-markup-shell.md",
+    "/ws/watchtower/todos/TODO-001-build-quiz-state-and-markup-shell.md",
   );
 
   const fourth = plan.todos[3];
   assert.equal(fourth.id, "TODO-004");
   assert.equal(
     fourth.specPath,
-    "/ws/next/todos/TODO-004-integrate-responsive-flow-and-qa.md",
+    "/ws/watchtower/todos/TODO-004-integrate-responsive-flow-and-qa.md",
   );
 });
 
@@ -101,23 +101,23 @@ test("parsePlanContent resolves markdown-link Spec cells (active-plan form)", ()
     "",
     "| Order | TODO | Group | Status | Spec | Deps | Context | Notes |",
     "|-------|------|-------|--------|------|------|---------|-------|",
-    "| 1 | TODO-001 Foo | A | IN PROGRESS | [next/todos/TODO-001-foo.md](next/todos/TODO-001-foo.md) | - | [next/CONTEXT.md](next/CONTEXT.md) | a note |",
+    "| 1 | TODO-001 Foo | A | IN PROGRESS | [watchtower/todos/TODO-001-foo.md](watchtower/todos/TODO-001-foo.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | a note |",
     "",
     "## Handoff",
     "",
     "- Next action: x",
   ].join("\n");
-  const plan = parsePlanContent(content, "/ws/next/NEXT.md");
+  const plan = parsePlanContent(content, "/ws/watchtower/NEXT.md");
   assert.equal(plan.status, "ACTIVE");
   assert.equal(plan.totalCount, 1);
   assert.equal(plan.todos[0].status, "IN_PROGRESS");
   assert.equal(plan.todos[0].group, "A");
-  assert.equal(plan.todos[0].specPath, "/ws/next/todos/TODO-001-foo.md");
+  assert.equal(plan.todos[0].specPath, "/ws/watchtower/todos/TODO-001-foo.md");
 });
 
 test("parsePlanContent returns no todos when Tracker section is absent", () => {
   const content = "# NEXT\n\n## Current Active Plan\n\nTitle: Empty\nStatus: ACTIVE\n\n## Handoff\n\n- none\n";
-  const plan = parsePlanContent(content, "/ws/next/NEXT.md");
+  const plan = parsePlanContent(content, "/ws/watchtower/NEXT.md");
   assert.equal(plan.title, "Empty");
   assert.equal(plan.totalCount, 0);
   assert.deepEqual(plan.todos, []);
