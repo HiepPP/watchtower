@@ -7,15 +7,16 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](#license)
 
-A read-only VS Code sidebar dashboard for your workspace's Watchtower plan files.
+A VS Code sidebar that stands guard over your `watchtower/` plan files and reports back, without ever laying a finger on them.
 
-Watchtower reads the `watchtower/` directory and never edits your plan files. It shows plan progress, TODO status, blocked work, past plans, and copy-ready commands.
+Think of it as a loyal sentry on the wall. It tallies your progress, flags the TODOs rotting in the dungeon, digs up old plans from the archive, and hands you copy-ready commands. It only ever looks. Your Markdown sleeps safe.
 
 <!-- Demo: replace with a screenshot or GIF of the Watchtower sidebar in action. -->
 
 ## Table of Contents
 
 - [Features](#features)
+- [The Problem](#the-problem)
 - [Why Watchtower](#why-watchtower)
 - [Requirements](#requirements)
 - [Install](#install)
@@ -40,15 +41,27 @@ Watchtower reads the `watchtower/` directory and never edits your plan files. It
 - Refreshes on its own when any file under `watchtower/` changes.
 - Read-only by design. It never writes to your plan files.
 
+## The Problem
+
+You rarely work on one task. You work on a stack of them. The hard part is not the work itself. It is keeping the stack straight.
+
+- Too many tasks at once. Several are in flight, a few are blocked, and you start the wrong one because you lost track of which was which.
+- Work that was never defined. A task just says "fix billing". When you open it, you no longer remember what "fix" meant, so you re-think it from scratch.
+- A cold return. You step away for a day. When you come back, the thread is gone: what got done, what is next, and why something stalled.
+
+Each of these costs you the same thing - time spent rebuilding context instead of shipping.
+
 ## Why Watchtower
 
-The `/watchtower` skill keeps plans as plain Markdown in a `watchtower/` directory. That is easy to edit but hard to scan at a glance.
+The `/watchtower` skill keeps every plan as plain Markdown in a `watchtower/` directory. That is easy to edit but hard to scan, and it does nothing to hold your context when you walk away. Watchtower turns the directory into a live dashboard, so the stack stays straight.
 
-| Without the extension | With Watchtower |
-|---|---|
-| Open `NEXT.md` and count rows by hand | See progress, status counts, and blocked work in the sidebar |
-| Hunt for a spec file path | Open a grouped TODO row from the dashboard |
-| Open Markdown source by mistake | Clicks open rendered preview by default |
+| Pain point | What it costs you | How Watchtower solves it |
+|---|---|---|
+| Too many tasks at once | You lose track of what is active, blocked, or done | The dashboard groups TODOs by Active, Blocked, Todo, and Done, with progress and status counts at a glance |
+| Work that was never defined | You re-think the task every time you open it | Each TODO is a spec file with Brief, Verify, and Outcome. One click opens it in rendered preview, so the definition is always in front of you |
+| A cold return | You waste the first hour back rebuilding context | `NEXT.md` is the single source of truth. The blocked summary shows why work stalled, the archive keeps past plans, and the view refreshes itself, so it is current the moment you open it |
+
+The result: open the sidebar and you see exactly where you left off, what is defined, and what to pick up next.
 
 ## Requirements
 
