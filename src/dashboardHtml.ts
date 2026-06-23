@@ -154,9 +154,11 @@ function commandButtons(mode: CommandMode): string {
   const prefix = commandPrefix(mode);
   return COMMANDS.map(
     (cmd) => {
-      const text = `${prefix} ${cmd.action}${cmd.suffix ?? ""}`;
+      const command = `${prefix} ${cmd.action}${cmd.suffix ?? ""}`;
+      // Copy the command with a trailing newline so it runs on paste.
+      const copyText = `${command}\n`;
       return (
-        `<button class="cmd-btn" data-action="copy" data-text="${escapeHtml(text)}" title="Copy ${escapeHtml(text)}">` +
+        `<button class="cmd-btn" data-action="copy" data-text="${escapeHtml(copyText)}" title="Copy ${escapeHtml(command)}">` +
       `${escapeHtml(cmd.label)}` +
         `</button>`
       );
