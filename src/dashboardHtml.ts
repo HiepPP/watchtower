@@ -10,9 +10,10 @@ export interface DashboardData {
 type CommandMode = "codex" | "claude";
 
 const COMMANDS = [
+  { label: "implement", action: "implement" },
+  { label: "implement subagents", action: "implement with fan out subagents" },
   { label: "next", action: "next" },
   { label: "verify", action: "verify" },
-  { label: "implement", action: "implement" },
   { label: "progress", action: "progress", suffix: " " },
   { label: "archive", action: "archive" },
 ];

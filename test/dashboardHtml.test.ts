@@ -202,11 +202,13 @@ test("copy buttons carry Codex and Claude watchtower commands", () => {
   assert.match(html, /data-text="\$watchtower next"/);
   assert.match(html, /data-text="\$watchtower verify"/);
   assert.match(html, /data-text="\$watchtower implement"/);
+  assert.match(html, /data-text="\$watchtower implement with fan out subagents"/);
   assert.match(html, /data-text="\$watchtower progress /);
   assert.match(html, /data-text="\$watchtower archive"/);
   assert.match(html, /data-text="\/watchtower next"/);
   assert.match(html, /data-text="\/watchtower verify"/);
   assert.match(html, /data-text="\/watchtower implement"/);
+  assert.match(html, /data-text="\/watchtower implement with fan out subagents"/);
   assert.match(html, /data-text="\/watchtower progress /);
   assert.match(html, /data-text="\/watchtower archive"/);
 });

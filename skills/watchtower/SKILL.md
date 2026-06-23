@@ -35,7 +35,7 @@ Use `$ARGUMENTS` to classify request. Details links to mode flow; dash means tab
 
 `--repo path` is a modifier, not a mode: use given repository instead of current git root.
 
-`implement team` is `implement` plus the `team` keyword. Match `team`, `with team`, `team of subagent(s)`, `subagent team`, `fan out`, `fan out subagents`, or `fan out a team` after or around `implement`. Bare `fan out subagents` / `fan out a team` with no other mode means `implement team`. Without any team keyword, default to sequential `implement`.
+`implement team` = `implement` run by a team of subagents. Any of these keywords triggers it, alone or with `implement`: `team`, `with team`, `team of subagent(s)`, `subagent team`, `fan out`, `fan out subagents`, `fan out a team`. No team keyword: run sequential `implement`.
 
 Arguments may chain modes in one call, for example `new and implement`, or `archive, and /commit`. Run them in order given. A `/command` token is an external skill, not a watchtower mode. Invoke it after watchtower modes finish.
 
@@ -77,10 +77,11 @@ Use for `new`. Create fresh plan when none exists, or add TODOs to active plan. 
    - `watchtower/NEXT.md` present with Status `ARCHIVED` or empty Tracker -> CREATE.
    - `watchtower/NEXT.md` present with every Tracker row `DONE` -> ask with `AskUserQuestion`: extend this plan (ADD), or archive it and start fresh (`archive` then CREATE). Do not guess.
    - `watchtower/NEXT.md` present with open TODOs -> ADD.
-2. CREATE: write `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, one spec file per TODO under `watchtower/todos/`, and one matching `TODO-NNN-outcome.md` sidecar per TODO. Do not create `watchtower/NEXT.VERIFY.md` for new-format plans. Assign plan `Slug:` once: `YYYYMMDD-kebab-title`, for example `20260619-arcade-mascot-spotlight`. Archive reuses this slug.
-3. ADD: append only requested Tracker rows to `watchtower/NEXT.md` and create matching `watchtower/todos/TODO-NNN-kebab-title.md` plus `watchtower/todos/TODO-NNN-outcome.md` files. If added TODOs broaden work past current Title, update Title and shared context only as needed.
-4. Open changed files in VS Code (Open In VS Code) after writing them.
-5. Legacy plan ADD: add only when existing legacy plan already has clear inline TODO format. If verify mapping is unclear or `watchtower/NEXT.VERIFY.md` is missing, stop and ask before changing legacy files. Do not migrate unless user asks.
+2. CREATE: before writing files, derive plan `Slug:` from current date plus final plan title: `YYYYMMDD-kebab-title`, for example `20260619-arcade-mascot-spotlight`. Write that exact `Slug:` into `watchtower/NEXT.md` under `## Current Active Plan`. Never create new-format `watchtower/NEXT.md` without `Slug:`. Do not defer slug choice to archive time.
+3. CREATE: write `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, one spec file per TODO under `watchtower/todos/`, and one matching `TODO-NNN-outcome.md` sidecar per TODO. Do not create `watchtower/NEXT.VERIFY.md` for new-format plans. Archive reuses existing `Slug:` only.
+4. ADD: append only requested Tracker rows to `watchtower/NEXT.md` and create matching `watchtower/todos/TODO-NNN-kebab-title.md` plus `watchtower/todos/TODO-NNN-outcome.md` files. If added TODOs broaden work past current Title, update Title and shared context only as needed. If active new-format plan lacks `Slug:`, stop and repair metadata before adding TODO rows.
+5. Open changed files in VS Code (Open In VS Code) after writing them.
+6. Legacy plan ADD: add only when existing legacy plan already has clear inline TODO format. If verify mapping is unclear or `watchtower/NEXT.VERIFY.md` is missing, stop and ask before changing legacy files. Do not migrate unless user asks.
 
 ## Open In VS Code
 
@@ -275,13 +276,14 @@ Do not put outcome prose in TODO spec files. Keep specs clean so future `impleme
 
 ## Archive
 
-Use for `archive`. Archive active plan files together under plan slug. Do not delete archive files.
+Use for `archive`. Archive active plan files together under existing plan slug. Do not delete archive files. Do not infer, derive, or guess slug during archive.
 
-1. Read `Slug:` from `watchtower/NEXT.md`. Build archive directory `watchtower/archive/<slug>/`. If it exists, add `-HHMM` to avoid overwrite.
-2. Before moving files, update `watchtower/NEXT.md`: set plan-level `Status: ARCHIVED`, set `Updated:` to current date, and append `- Archived: <YYYY-MM-DD> -> watchtower/archive/<slug>/` under `## Archive`.
-3. Move `watchtower/NEXT.md`, `watchtower/CONTEXT.md` if present, and `watchtower/todos/` if present into that archive directory.
-4. If `watchtower/NEXT.VERIFY.md` exists, treat it as legacy and archive it in same directory.
-5. Do not remove old archive directories. Do not create fresh plan unless user also asked for `new`.
+1. Read `Slug:` from `watchtower/NEXT.md`. If `Slug:` is missing or empty, stop before moving files and report invalid active plan metadata. Do not derive slug from title, date, folder, or H1 during archive.
+2. Build archive directory `watchtower/archive/<slug>/`. If it exists, add `-HHMM` to avoid overwrite.
+3. Before moving files, update `watchtower/NEXT.md`: set plan-level `Status: ARCHIVED`, set `Updated:` to current date, and append `- Archived: <YYYY-MM-DD> -> watchtower/archive/<slug>/` under `## Archive`.
+4. Move `watchtower/NEXT.md`, `watchtower/CONTEXT.md` if present, and `watchtower/todos/` if present into that archive directory.
+5. If `watchtower/NEXT.VERIFY.md` exists, treat it as legacy and archive it in same directory.
+6. Do not remove old archive directories. Do not create fresh plan unless user also asked for `new`.
 
 ## Rules
 
@@ -290,6 +292,7 @@ Use for `archive`. Archive active plan files together under plan slug. Do not de
 - Always write plan files in English, even when user prompts in Vietnamese or any other language.
 - In plan prose, lists, and tables, write file references as markdown links. Do not leave file paths as plain text or inline code unless inside command blocks, file tree blocks, or exact command examples.
 - `new` does not create `watchtower/NEXT.VERIFY.md` for new-format plans.
+- `new` MUST assign and write `Slug:` during CREATE. Archive later reuses that exact slug.
 - `new` never archives. To start fresh unrelated plan while one is active, run `archive` first, then `new`.
 - After `new` writes or updates specs, open changed plan files in VS Code with direct `code -r -g` commands. If `code` is missing, print fallback commands. No other mode opens VS Code.
 - `verify` promotes TODO to `DONE` only when all `## Verify` checks pass live and the outcome sidecar is updated. It never sets `IN PROGRESS` or `BLOCKED`.
@@ -297,6 +300,7 @@ Use for `archive`. Archive active plan files together under plan slug. Do not de
 - `implement` does not read outcome sidecars by default, even when they exist. It reads them only when the user's implement prompt explicitly asks for outcome context.
 - `implement` builds sequentially in-session. `implement team` builds with subagents and MUST run Team Cleanup at the end: shut down every spawned background agent. Same-file work goes to one builder; never parallel-edit one file.
 - `archive` moves `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, `watchtower/todos/`, and any legacy `watchtower/NEXT.VERIFY.md` to `watchtower/archive/<slug>/`.
+- `archive` MUST NOT guess or derive slug. If `Slug:` is missing or empty, stop before moving files.
 - Before archiving legacy plan, if `watchtower/NEXT.VERIFY.md` has unchecked `## Pre-commit gate` item, warn user and offer to run it first. If user archives anyway, note open gate in recap.
 - `next` mode and "what next?" asks are read-only. Never edit NEXT files when only proposing.
 - Do not delete archive files.
