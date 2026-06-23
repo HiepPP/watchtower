@@ -1,7 +1,7 @@
 ---
 name: watchtower
-description: Use when creating, updating, archiving, reviewing, implementing, or asking what to do next on repo-local TODO plans in watchtower/NEXT.md. implement reads NEXT.md, then loads only current TODO specs and required shared context; outcome files are opt-in only. Also triggers on "what next?" during repo work.
-argument-hint: "[new|progress|archive|verify|next|implement|implement team] [--repo path] [summary]"
+description: Use when creating, updating, archiving, reviewing, verifying, researching, implementing, or asking what to do next on repo-local TODO plans in watchtower/NEXT.md. implement reads NEXT.md, then loads only current TODO specs and required shared context; outcome files are opt-in only. research maps codebase questions via /voyager into watchtower/RESEARCH.md, read-only re code. Also triggers on "what next?" during repo work.
+argument-hint: "[new|progress|archive|verify|next|research|research team|implement|implement team] [--repo path] [summary]"
 disable-model-invocation: false
 user-invocable: true
 license: MIT
@@ -15,9 +15,9 @@ Maintain repo-local planning files. Keep `watchtower/NEXT.md` as active manifest
 
 Use when the user invokes `/watchtower` or asks to write, revise, archive, review, verify, or implement a repo-local NEXT plan. Also use for natural-language "what next?" / "what's next?" / "next steps?" asks while in a repo: read `watchtower/NEXT.md`, gauge Tracker progress, and propose next action.
 
-Only `implement` writes code. `new`, `progress`, `archive`, and `next` never write code. `verify` runs checks and records results in TODO outcome sidecar files.
+Only `implement` writes code. `new`, `progress`, `archive`, `next`, and `research` never write code. `verify` runs checks and records results in TODO outcome sidecar files. `research` writes only `watchtower/RESEARCH.md` and research sidecars; never code, never `NEXT.md` or TODO files.
 
-Tip: say "fan out subagents" or "fan out a team" to run implement with a subagent team. Each agent digs deep on its work set so nothing gets missed; watchtower shuts every spawned agent down after (Team Cleanup).
+Tip: say "fan out subagents" or "fan out a team" to run implement with a subagent team. Each agent digs deep on its work set so nothing gets missed; watchtower shuts every spawned agent down after (Team Cleanup). Same fan-out works for research: `research team` runs one search agent per question, then Team Cleanup.
 
 ## Arguments
 
@@ -27,9 +27,11 @@ Use `$ARGUMENTS` to classify request. Details links to mode flow; dash means tab
 |----------|---------|---------|---------|
 | `new` | Create fresh manifest plan or add TODO files to active plan | `NEXT.md` + `CONTEXT.md` + `todos/` | [Author Plan](#author-plan) |
 | `progress` | Mark TODO status or add session notes | `NEXT.md` Tracker + TODO outcome sidecar | [Progress](#progress) |
-| `archive` | Revise session, write LEARN.md, then archive manifest, context, TODO files, and any legacy verify file | moves active plan files to `watchtower/archive/` + writes `LEARN.md` | [Archive](#archive) |
+| `archive` | Revise session, write LEARN.md, then archive manifest, context, TODO files, research files, and any legacy verify file | moves active plan files to `watchtower/archive/` + writes `LEARN.md` | [Archive](#archive) |
 | `verify` | Run checks from TODO files, record each result, promote passing TODOs to `DONE` | TODO outcome sidecar + Tracker Status | [Run Verification](#run-verification) |
 | `next` | Read active plan and propose next action from Tracker | nothing | [Propose Next](#propose-next) |
+| `research` | Map 1+ codebase questions via /voyager, write findings | `RESEARCH.md` + `research/` sidecars | [Map Research](#map-research) |
+| `research team` | Same as `research`, but one search subagent per question, then auto shut down every spawned agent | `RESEARCH.md` + `research/` sidecars | [Map Research](#map-research) |
 | `implement` | Load current TODO specs plus required context, then build sequentially in this session | code + plan files + TODO outcome sidecars | [Implement](#implement) |
 | `implement team` | Same as `implement`, but build with a team of subagents, then auto shut down every spawned background agent. Triggers include `team` and `fan out subagents` | code + plan files | [Implement](#implement) |
 
@@ -37,12 +39,14 @@ Use `$ARGUMENTS` to classify request. Details links to mode flow; dash means tab
 
 `implement team` = `implement` run by a team of subagents. Any of these keywords triggers it, alone or with `implement`: `team`, `with team`, `team of subagent(s)`, `subagent team`, `fan out`, `fan out subagents`, `fan out a team`. No team keyword: run sequential `implement`.
 
+`research team` = `research` run by a team of subagents, one per question. Same team keywords trigger it, alone or with `research`. No team keyword: run sequential `research`.
+
 Arguments may chain modes in one call, for example `new and implement`, or `archive, and /commit`. Run them in order given. A `/command` token is an external skill, not a watchtower mode. Invoke it after watchtower modes finish.
 
 ## Workflow
 
 1. Resolve repo root. Use `--repo path` when given; else current git root. Prove it with `git -C <path> rev-parse --show-toplevel`. Stop if target repo cannot be proven.
-2. For `new`, `progress`, `archive`, and `verify`, read before writing: `.gitignore`, `watchtower/NEXT.md` if present, `watchtower/CONTEXT.md` if present, `watchtower/NEXT.VERIFY.md` if present, TODO filenames and outcome filenames under `watchtower/todos/`, and archive filenames under `watchtower/archive/`. For `implement`, use the minimal load set in Implement. For `next`, skip this broad read; Propose Next owns minimal load.
+2. For `new`, `progress`, `archive`, and `verify`, read before writing: `.gitignore`, `watchtower/NEXT.md` if present, `watchtower/CONTEXT.md` if present, `watchtower/NEXT.VERIFY.md` if present, TODO filenames and outcome filenames under `watchtower/todos/`, and archive filenames under `watchtower/archive/`. For `implement`, use the minimal load set in Implement. For `next`, skip this broad read; Propose Next owns minimal load. For `research`, skip this broad read; Map Research owns minimal load.
 3. Do not add `/watchtower/` to `.gitignore`. If `watchtower/` is already ignored, keep current state. If tracked, keep tracked.
 4. Detect plan shape before routing:
    - New format: `watchtower/NEXT.md` Tracker has `Spec`, `Deps`, and `Context` columns. TODO detail lives under `watchtower/todos/`.
@@ -51,6 +55,8 @@ Arguments may chain modes in one call, for example `new and implement`, or `arch
 5. Classify from `$ARGUMENTS` and route:
    - `new` -> Author Plan
    - `next` or natural-language "what next?" -> Propose Next
+   - `research` -> Map Research (sequential, this session)
+   - `research team` or `research` with `fan out` -> Map Research (team of subagents, then Team Cleanup)
    - `verify` -> Run Verification
    - `implement` -> Implement (sequential, this session)
    - `implement team` or `fan out subagents` -> Implement (team of subagents, then Team Cleanup)
@@ -85,12 +91,11 @@ Use for `new`. Create fresh plan when none exists, or add TODOs to active plan. 
 
 ## Open In VS Code
 
-Runs after `new` writes specs. Opens changed plan files in current VS Code window for review. Use `code -r -g` directly. Do not call another skill for this.
+Runs after `new` writes specs or `research` writes findings. Opens changed plan files in current VS Code window for review. Use `code -r -g` directly. Do not call another skill for this.
 
 1. Build one `-g` target per file with absolute paths:
-   - `watchtower/NEXT.md` at line 1 on CREATE, else added Tracker row line.
-   - `watchtower/CONTEXT.md` at line 1 on CREATE, or on ADD only when context changed.
-   - Each new TODO spec file at line 1.
+   - `new`: `watchtower/NEXT.md` at line 1 on CREATE, else added Tracker row line; `watchtower/CONTEXT.md` at line 1 on CREATE, or on ADD only when context changed; each new TODO spec file at line 1.
+   - `research`: each new `watchtower/research/RESEARCH-NNN-*.md` at line 1, and `watchtower/RESEARCH.md` at line 1.
 2. Check `command -v code`. If present, run one command per target:
 
 ```bash
@@ -98,7 +103,7 @@ code -r -g "<absolute-path>":<line>:1
 ```
 
 3. If `code` CLI is missing, do not fail `new`. Finish writing specs, tell user once, and print the exact commands.
-4. Open only on CREATE or ADD. Never open in `next`, `verify`, `progress`, or `archive`.
+4. Open on CREATE or ADD (`new`) and on `research`. Never open in `next`, `verify`, `progress`, or `archive`.
 
 ## Propose Next
 
@@ -114,6 +119,25 @@ Use for `next` and natural-language "what next?" asks. Read-only. Never edit NEX
    - Recommended next TODO with Brief and ready-to-run Prompt block when present.
    - BLOCKED items, with decision each needs.
    - If every item is DONE: report completion, recommend fresh plan with `new`, and echo Handoff next action.
+
+## Map Research
+
+Use for `research` and `research team`. Answer 1+ codebase questions with `/voyager`, write findings to `watchtower/RESEARCH.md` and per-question sidecars. Never writes code. Never edits `NEXT.md`, `CONTEXT.md`, or TODO files.
+
+Two execution modes, same output:
+
+- `research` (default): run each question yourself, sequentially in this session.
+- `research team`: run one search subagent per question (Agent tool), in parallel, then Team Cleanup (Implement step 11). Synthesize agent findings yourself; only the main session writes `RESEARCH.md` and sidecars, so parallel agents never clobber the same file.
+
+1. Resolve repo root (Workflow step 1). Minimal load: read `watchtower/RESEARCH.md` if present to get max `RESEARCH-NNN`. Skip broad plan read. Active `NEXT.md` not required; research runs standalone.
+2. Create `watchtower/` and `watchtower/research/` if absent. Do not create or touch `NEXT.md`, `CONTEXT.md`, or TODO files.
+3. Parse questions from `$ARGUMENTS`. Each quoted string or distinct ask is one question. Assign next `RESEARCH-NNN` per question, continuing from index max.
+4. For each question, run `/voyager` workflow: project code -> `gitnexus_query` first, then `gitnexus_context` for named symbols, then Grep/Glob, then Read. If GitNexus index is stale, tell user to run `npx gitnexus analyze`, finish with best Grep/Glob effort, and set sidecar `Status: PARTIAL`.
+5. Write one sidecar per question: `watchtower/research/RESEARCH-NNN-kebab-question.md`, using the skeleton in [references/research-template.md](references/research-template.md). Quote real code with `path:line` before each block. Caveman-full English per Writing Style.
+6. Append one row per question to `## Index` in `watchtower/RESEARCH.md`. Create `RESEARCH.md` from the template if absent.
+7. Open new research files in VS Code (Open In VS Code).
+8. Validate edits with `git diff --check` and `git status --short`. Report per question: ID, scope, Status, sidecar link.
+9. `research team` only: after writing, run Team Cleanup (Implement step 11) - shut down every spawned search agent, list them in Recap.
 
 ## Run Verification
 
@@ -181,17 +205,21 @@ Two execution modes, same goal and same steps 1-9:
 - `watchtower/CONTEXT.md`: short shared context that applies across TODOs. Keep stable and brief.
 - `watchtower/todos/TODO-NNN-kebab-title.md`: full TODO spec. Holds `## Brief` and `## Verify`. It does not hold outcome text.
 - `watchtower/todos/TODO-NNN-outcome.md`: outcome sidecar. Holds status, changed facts, preserved/created contract, verification evidence, blockers, and handoff notes for TODO `NNN`.
+- `watchtower/RESEARCH.md`: research index. Append-only table of research entries (ID, date, question, scope, status, sidecar link). Holds no findings body. Written by `research`.
+- `watchtower/research/RESEARCH-NNN-kebab-question.md`: research sidecar. Holds one question's findings: meta, summary, evidence with `path:line` quotes, runtime/ASCII flow, file references. Written by `research`.
 - `watchtower/NEXT.VERIFY.md`: legacy verify file only. Do not create for new-format plans.
 - `watchtower/archive/<slug>/NEXT.md`: archived manifest.
 - `watchtower/archive/<slug>/CONTEXT.md`: archived shared context when present.
 - `watchtower/archive/<slug>/todos/`: archived TODO files when present.
 - `watchtower/archive/<slug>/NEXT.VERIFY.md`: archived legacy verify file when present.
+- `watchtower/archive/<slug>/RESEARCH.md`: archived research index when present.
+- `watchtower/archive/<slug>/research/`: archived research sidecars when present.
 - `watchtower/archive/<slug>/LEARN.md`: one overall session review for archived plan. Holds per-TODO plan vs shipped with mistake/cause/fix, plan-level cross-TODO issues, and lessons. Written at archive time.
 - Root `NEXT.md`, `NEXT_*.md`, and `NEXT.VERIFY.md` are legacy ignored paths. Do not create new root NEXT files.
 
 ## Writing Style
 
-Write every `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, and `watchtower/todos/*.md` in caveman-full style: shortest words, no waste, same logic. Reader still reviews plan files alone, before any code.
+Write every `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, `watchtower/todos/*.md`, `watchtower/RESEARCH.md`, and `watchtower/research/*.md` in caveman-full style: shortest words, no waste, same logic. Reader still reviews plan files alone, before any code.
 
 Always write plan files in English, even when user prompts in Vietnamese or any other language.
 
@@ -286,7 +314,7 @@ Use for `archive`. Revise session first, write LEARN.md, then archive active pla
    Review per TODO first: each TODO plan vs shipped, flag missed step, wrong target, spec gap, skipped verify, blocker; suggest likely mistake and fix. Then review plan-level: cross-TODO issues like scope creep, wrong order, dep gap, plan misdescribes reality. Hold findings for step 7.
 3. Build archive directory `watchtower/archive/<slug>/`. If it exists, add `-HHMM` to avoid overwrite.
 4. Before moving files, update `watchtower/NEXT.md`: set plan-level `Status: ARCHIVED`, set `Updated:` to current date, and append `- Archived: <YYYY-MM-DD> -> watchtower/archive/<slug>/` under `## Archive`.
-5. Move `watchtower/NEXT.md`, `watchtower/CONTEXT.md` if present, and `watchtower/todos/` if present into that archive directory.
+5. Move `watchtower/NEXT.md`, `watchtower/CONTEXT.md` if present, `watchtower/todos/` if present, `watchtower/RESEARCH.md` if present, and `watchtower/research/` if present into that archive directory.
 6. If `watchtower/NEXT.VERIFY.md` exists, treat it as legacy and archive it in same directory.
 7. Write step 2 review into `watchtower/archive/<slug>/LEARN.md`, same level as archived `NEXT.md`. Write caveman-full English per Writing Style. Always write the file: when no discrepancy found, write `match` per TODO, `none` plan-level, note clean. Use skeleton below.
 8. Do not remove old archive directories. Do not create fresh plan unless user also asked for `new`.
@@ -327,11 +355,15 @@ Discrepancy: <N found / none>. One line, plan vs shipped across plan.
 - `verify` writes `## Outcome` in `watchtower/todos/TODO-NNN-outcome.md`, never in the TODO spec file.
 - `implement` does not read outcome sidecars by default, even when they exist. It reads them only when the user's implement prompt explicitly asks for outcome context.
 - `implement` builds sequentially in-session. `implement team` builds with subagents and MUST run Team Cleanup at the end: shut down every spawned background agent. Same-file work goes to one builder; never parallel-edit one file.
-- `archive` moves `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, `watchtower/todos/`, and any legacy `watchtower/NEXT.VERIFY.md` to `watchtower/archive/<slug>/`.
+- `archive` moves `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, `watchtower/todos/`, `watchtower/RESEARCH.md`, `watchtower/research/`, and any legacy `watchtower/NEXT.VERIFY.md` to `watchtower/archive/<slug>/`.
 - `archive` revises session and writes one overall `watchtower/archive/<slug>/LEARN.md`: per-TODO plan vs shipped with mistake/cause/fix, plan-level cross-TODO issues, lessons. Always write it; write `none`/`match` when no discrepancy.
 - `archive` MUST NOT guess or derive slug. If `Slug:` is missing or empty, stop before moving files.
 - Before archiving legacy plan, if `watchtower/NEXT.VERIFY.md` has unchecked `## Pre-commit gate` item, warn user and offer to run it first. If user archives anyway, note open gate in recap.
 - `next` mode and "what next?" asks are read-only. Never edit NEXT files when only proposing.
+- `research` and `research team` never write code and never edit `NEXT.md`, `CONTEXT.md`, or TODO files. They write only `watchtower/RESEARCH.md` and `watchtower/research/RESEARCH-NNN-*.md`.
+- `research` runs standalone; active plan not required. It uses `/voyager` for project code: `gitnexus_query` first, then `gitnexus_context`, then Grep/Glob.
+- `research` numbers entries `RESEARCH-NNN` continuing from the `watchtower/RESEARCH.md` index max. Sidecar `Status: PARTIAL` when GitNexus index stale or question unresolved.
+- `research team` builds with one search subagent per question and MUST run Team Cleanup at the end. Only the main session writes `RESEARCH.md` and sidecars; subagents never write plan files.
 - Do not delete archive files.
 - Do not change `.gitignore` to ignore or unignore `watchtower/`.
 - Preserve unrelated worktree changes.
@@ -342,3 +374,4 @@ Discrepancy: <N found / none>. One line, plan vs shipped across plan.
 - [references/todo-template.md](references/todo-template.md): Full copy-paste skeleton for `NEXT.md`, `CONTEXT.md`, and per-TODO files.
 - [references/mermaid-template.md](references/mermaid-template.md): One concise mermaid example per chart type, with gotchas.
 - [references/skill-routing.md](references/skill-routing.md): Prominent skills to pick from when a TODO fits one; named in TODO Brief or Prompt.
+- [references/research-template.md](references/research-template.md): Skeleton for `RESEARCH.md` index and per-question research sidecar.
