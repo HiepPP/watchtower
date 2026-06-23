@@ -30,7 +30,7 @@ watchtower/
 ## Current Active Plan
 
 - Title: <plan title>
-- Slug: <YYYYMMDD-kebab-title> (required; assigned once at create; archive reuses exact value)
+- Slug: <YYYYMMDD-kebab-title> (assigned once at create; archive step reuses it)
 - Status: <ACTIVE | DONE | ARCHIVED>
 - Updated: <YYYY-MM-DD>
 
