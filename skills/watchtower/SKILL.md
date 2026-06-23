@@ -27,7 +27,7 @@ Use `$ARGUMENTS` to classify request. Details links to mode flow; dash means tab
 |----------|---------|---------|---------|
 | `new` | Create fresh manifest plan or add TODO files to active plan | `NEXT.md` + `CONTEXT.md` + `todos/` | [Author Plan](#author-plan) |
 | `progress` | Mark TODO status or add session notes | `NEXT.md` Tracker + TODO outcome sidecar | [Progress](#progress) |
-| `archive` | Archive active manifest, context, TODO files, and any legacy verify file | moves active plan files to `watchtower/archive/` | [Archive](#archive) |
+| `archive` | Revise session, write LEARN.md, then archive manifest, context, TODO files, and any legacy verify file | moves active plan files to `watchtower/archive/` + writes `LEARN.md` | [Archive](#archive) |
 | `verify` | Run checks from TODO files, record each result, promote passing TODOs to `DONE` | TODO outcome sidecar + Tracker Status | [Run Verification](#run-verification) |
 | `next` | Read active plan and propose next action from Tracker | nothing | [Propose Next](#propose-next) |
 | `implement` | Load current TODO specs plus required context, then build sequentially in this session | code + plan files + TODO outcome sidecars | [Implement](#implement) |
@@ -186,6 +186,7 @@ Two execution modes, same goal and same steps 1-9:
 - `watchtower/archive/<slug>/CONTEXT.md`: archived shared context when present.
 - `watchtower/archive/<slug>/todos/`: archived TODO files when present.
 - `watchtower/archive/<slug>/NEXT.VERIFY.md`: archived legacy verify file when present.
+- `watchtower/archive/<slug>/LEARN.md`: one overall session review for archived plan. Holds per-TODO plan vs shipped with mistake/cause/fix, plan-level cross-TODO issues, and lessons. Written at archive time.
 - Root `NEXT.md`, `NEXT_*.md`, and `NEXT.VERIFY.md` are legacy ignored paths. Do not create new root NEXT files.
 
 ## Writing Style
@@ -276,14 +277,41 @@ Do not put outcome prose in TODO spec files. Keep specs clean so future `impleme
 
 ## Archive
 
-Use for `archive`. Archive active plan files together under existing plan slug. Do not delete archive files. Do not infer, derive, or guess slug during archive.
+Use for `archive`. Revise session first, write LEARN.md, then archive active plan files together under existing plan slug. Do not delete archive files. Do not infer, derive, or guess slug during archive.
 
 1. Read `Slug:` from `watchtower/NEXT.md`. If `Slug:` is missing or empty, stop before moving files and report invalid active plan metadata. Do not derive slug from title, date, folder, or H1 during archive.
-2. Build archive directory `watchtower/archive/<slug>/`. If it exists, add `-HHMM` to avoid overwrite.
-3. Before moving files, update `watchtower/NEXT.md`: set plan-level `Status: ARCHIVED`, set `Updated:` to current date, and append `- Archived: <YYYY-MM-DD> -> watchtower/archive/<slug>/` under `## Archive`.
-4. Move `watchtower/NEXT.md`, `watchtower/CONTEXT.md` if present, and `watchtower/todos/` if present into that archive directory.
-5. If `watchtower/NEXT.VERIFY.md` exists, treat it as legacy and archive it in same directory.
-6. Do not remove old archive directories. Do not create fresh plan unless user also asked for `new`.
+2. Revise session before moving. Read each TODO `## Brief` and `## Verify` under `watchtower/todos/`, each matching `TODO-NNN-outcome.md`, and `watchtower/NEXT.md` Tracker and Handoff. Compare plan vs shipped:
+   - Use this session's implement knowledge when archive runs after implement.
+   - Else compare spec `## Brief`/`## Verify` vs `## Outcome` (Changed, Contract, Verified) and real repo state (`git diff`/`git log`).
+   Review per TODO first: each TODO plan vs shipped, flag missed step, wrong target, spec gap, skipped verify, blocker; suggest likely mistake and fix. Then review plan-level: cross-TODO issues like scope creep, wrong order, dep gap, plan misdescribes reality. Hold findings for step 7.
+3. Build archive directory `watchtower/archive/<slug>/`. If it exists, add `-HHMM` to avoid overwrite.
+4. Before moving files, update `watchtower/NEXT.md`: set plan-level `Status: ARCHIVED`, set `Updated:` to current date, and append `- Archived: <YYYY-MM-DD> -> watchtower/archive/<slug>/` under `## Archive`.
+5. Move `watchtower/NEXT.md`, `watchtower/CONTEXT.md` if present, and `watchtower/todos/` if present into that archive directory.
+6. If `watchtower/NEXT.VERIFY.md` exists, treat it as legacy and archive it in same directory.
+7. Write step 2 review into `watchtower/archive/<slug>/LEARN.md`, same level as archived `NEXT.md`. Write caveman-full English per Writing Style. Always write the file: when no discrepancy found, write `match` per TODO, `none` plan-level, note clean. Use skeleton below.
+8. Do not remove old archive directories. Do not create fresh plan unless user also asked for `new`.
+
+One overall LEARN.md per session. Per-TODO findings go under `## Per TODO`; cross-TODO findings under `## Plan-Level`. Skeleton:
+
+```markdown
+# Learn <slug>
+
+## Summary
+
+Discrepancy: <N found / none>. One line, plan vs shipped across plan.
+
+## Per TODO
+
+- TODO-NNN: plan <spec said> -> shipped <what shipped>. Mistake: <what + likely cause>. Fix: <suggest>. Write `match` when TODO went as planned.
+
+## Plan-Level
+
+- Cross-TODO issue: scope creep, wrong order, dep gap, plan misdescribes reality. `none` when clean.
+
+## Lessons
+
+- <do differently next plan>
+```
 
 ## Rules
 
@@ -300,6 +328,7 @@ Use for `archive`. Archive active plan files together under existing plan slug. 
 - `implement` does not read outcome sidecars by default, even when they exist. It reads them only when the user's implement prompt explicitly asks for outcome context.
 - `implement` builds sequentially in-session. `implement team` builds with subagents and MUST run Team Cleanup at the end: shut down every spawned background agent. Same-file work goes to one builder; never parallel-edit one file.
 - `archive` moves `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, `watchtower/todos/`, and any legacy `watchtower/NEXT.VERIFY.md` to `watchtower/archive/<slug>/`.
+- `archive` revises session and writes one overall `watchtower/archive/<slug>/LEARN.md`: per-TODO plan vs shipped with mistake/cause/fix, plan-level cross-TODO issues, lessons. Always write it; write `none`/`match` when no discrepancy.
 - `archive` MUST NOT guess or derive slug. If `Slug:` is missing or empty, stop before moving files.
 - Before archiving legacy plan, if `watchtower/NEXT.VERIFY.md` has unchecked `## Pre-commit gate` item, warn user and offer to run it first. If user archives anyway, note open gate in recap.
 - `next` mode and "what next?" asks are read-only. Never edit NEXT files when only proposing.
