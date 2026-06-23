@@ -98,13 +98,17 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  if (rootDir) {
+  // Watch watchtower/ regardless of whether a plan exists yet, so a fresh
+  // workspace still auto-refreshes once watchtower/NEXT.md appears. Tolerates
+  // empty rootDir: readPlan/listArchive return null/[] when no plan exists,
+  // and updateStatus hides the status bar. Skip only when no folder base at all.
+  const watchBase = rootDir ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (watchBase) {
     const watcher = vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(rootDir, `${PLAN_DIR}/**`),
+      new vscode.RelativePattern(watchBase, `${PLAN_DIR}/**`),
     );
     const onPlanChange = (): void => {
-      provider.refresh();
-      updateStatus();
+      provider.refreshDebounced(updateStatus);
     };
     watcher.onDidChange(onPlanChange);
     watcher.onDidCreate(onPlanChange);

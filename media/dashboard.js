@@ -4,6 +4,17 @@ const toast = document.getElementById("toast");
 let toastTimer = 0;
 const state = vscode.getState() || { collapsed: {} };
 
+// Persist scroll across wholesale HTML re-renders (refresh() rewrites webview.html).
+// vscode state survives re-renders, so restoring on script load keeps position.
+let scrollTimer = 0;
+function rememberScroll() {
+  window.clearTimeout(scrollTimer);
+  scrollTimer = window.setTimeout(() => {
+    state.scrollTop = window.scrollY;
+    vscode.setState(state);
+  }, 80);
+}
+
 function showToast(text) {
   if (!toast) return;
   toast.textContent = text;
@@ -38,6 +49,13 @@ function applySectionState() {
 }
 
 applySectionState();
+
+// Restore scroll after re-render. Re-run on every load since refresh rewrites html.
+if (typeof state.scrollTop === "number" && state.scrollTop > 0) {
+  window.scrollTo(0, state.scrollTop);
+}
+
+window.addEventListener("scroll", rememberScroll, { passive: true });
 
 document.addEventListener("click", (e) => {
   const head = e.target.closest(".sec-head");

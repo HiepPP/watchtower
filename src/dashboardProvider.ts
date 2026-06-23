@@ -12,6 +12,7 @@ interface DashboardMessage {
 
 export class WatchtowerDashboardProvider implements vscode.WebviewViewProvider {
   private view?: vscode.WebviewView;
+  private refreshTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private readonly rootDir: string,
@@ -20,6 +21,18 @@ export class WatchtowerDashboardProvider implements vscode.WebviewViewProvider {
 
   refresh(): void {
     if (this.view) this.view.webview.html = this.document();
+  }
+
+  // Coalesce rapid watchtower/ file events into one refresh. Watcher fires per
+  // save; bursts (multi-file save, formatter rewrite) would re-render per event
+  // and flicker. Manual refresh command stays immediate via refresh().
+  refreshDebounced(onDone?: () => void, delayMs = 200): void {
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+    this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = undefined;
+      this.refresh();
+      onDone?.();
+    }, delayMs);
   }
 
   resolveWebviewView(view: vscode.WebviewView): void {
