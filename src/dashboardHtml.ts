@@ -250,14 +250,40 @@ export function renderDashboardHtml(data: DashboardData): string {
 }
 
 function emptyState(nextPath: string): string {
+  const copyIcon =
+    `<svg class="copy-cmd-icon" viewBox="0 0 16 16" aria-hidden="true">` +
+    `<rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/>` +
+    `<path d="M3.5 10.5h-1A1.5 1.5 0 0 1 1 9V2.5A1.5 1.5 0 0 1 2.5 1H9a1.5 1.5 0 0 1 1.5 1.5v1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `</svg>`;
+  const copyButtons = [
+    { mode: "Codex", prefix: "$watchtower" },
+    { mode: "Claude", prefix: "/watchtower" },
+  ]
+    .map(({ mode, prefix }) => {
+      const label = `${prefix} new`;
+      // Copy a runnable command stub: prefix + "new" + newline, no <summary>.
+      const copyText = `${label}\n`;
+      return (
+        `<button class="copy-cmd" data-action="copy" data-text="${escapeHtml(copyText)}" title="Copy ${escapeHtml(label)} for ${escapeHtml(mode)}">` +
+        `<span class="copy-cmd-label">` +
+        `<span class="copy-cmd-mode">${escapeHtml(mode)}</span>` +
+        `<span class="copy-cmd-text">${escapeHtml(label)}</span>` +
+        `</span>` +
+        copyIcon +
+        `</button>`
+      );
+    })
+    .join("");
   return (
     `<div class="empty">` +
     `<div class="empty-title">No active plan</div>` +
     `<div class="empty-sub">No watchtower/NEXT.md found in this workspace.</div>` +
-    `<div class="empty-hint">Run <code>$watchtower new &lt;summary&gt;</code> or <code>/watchtower new &lt;summary&gt;</code>.</div>` +
+    `<div class="empty-hint">Copy a command to start a new plan:</div>` +
+    `<div class="empty-actions">${copyButtons}</div>` +
     (nextPath
       ? `<button class="cmd-btn" data-action="openNext" data-path="${escapeHtml(nextPath)}">Open NEXT.md</button>`
       : "") +
+    `<div class="toast" id="toast" hidden>Copied</div>` +
     `</div>`
   );
 }

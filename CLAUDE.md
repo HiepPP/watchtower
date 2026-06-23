@@ -43,6 +43,39 @@ This project is indexed by GitNexus as **watchtower** (124 symbols, 260 relation
 
 <!-- gitnexus:end -->
 
+## Build and Install
+
+Run `scripts/build-and-install.sh` to package the VSIX and install it into VS Code.
+
+Run it automatically, without asking, after any of these:
+
+- Editing extension code: files under `src/` or `media/`.
+- Editing `package.json` (commands, contributes, version).
+- Any change that must show up in the running VS Code extension.
+
+Skip it when the change only touches docs, mock data, or `watchtower/` plans.
+
+```bash
+bash scripts/build-and-install.sh
+```
+
+After it finishes, tell the user to reload the VS Code window to apply.
+
+## Sync Global Skill
+
+Run `scripts/sync-global-watchtower-skill.sh` to copy the global skill
+(`~/.claude/skills/watchtower`) into the repo (`skills/watchtower`).
+
+Run it automatically, without asking, after any of these:
+
+- The global watchtower skill changes.
+- Editing files under `skills/watchtower` that should match the global copy.
+- Before committing, if the repo skill copy may be stale.
+
+```bash
+bash scripts/sync-global-watchtower-skill.sh
+```
+
 ## Mock TODO Data
 
 - Mock Watchtower data lives in `mock-todo/`.

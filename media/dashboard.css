@@ -478,11 +478,75 @@ body {
   margin-bottom: 14px;
 }
 
-.empty code {
+.empty-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 240px;
+  margin: 0 auto 16px;
+}
+
+.copy-cmd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--vscode-button-border, var(--line));
+  border-radius: 6px;
+  background: var(--vscode-button-secondaryBackground, transparent);
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
   font-family: var(--vscode-editor-font-family, monospace);
-  background: var(--vscode-editorWidget-background, rgba(128, 128, 128, 0.12));
-  padding: 1px 5px;
-  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+
+.copy-cmd:hover {
+  background: var(--vscode-button-secondaryHoverBackground, var(--vscode-toolbar-hoverBackground));
+  border-color: var(--vscode-focusBorder);
+}
+
+.copy-cmd:active {
+  transform: translateY(1px);
+}
+
+.copy-cmd-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.copy-cmd-mode {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+  font-family: var(--vscode-font-family);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.copy-cmd-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-cmd-icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  opacity: 0.65;
+}
+
+.copy-cmd:hover .copy-cmd-icon {
+  opacity: 1;
 }
 
 .empty .cmd-btn {
@@ -507,6 +571,7 @@ body {
 
 /* Focus + scrollbars */
 .row[role="button"]:focus-visible,
+.copy-cmd:focus-visible,
 .cmd-btn:focus-visible,
 .file-btn:focus-visible,
 .sec-head:focus-visible,
