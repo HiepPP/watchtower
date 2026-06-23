@@ -79,6 +79,9 @@ document.addEventListener("click", (e) => {
     case "copy":
       vscode.postMessage({ type: "copy", text: el.dataset.text ?? "" });
       break;
+    case "archive":
+      vscode.postMessage({ type: "archive" });
+      break;
     case "refresh":
       vscode.postMessage({ type: "refresh" });
       break;

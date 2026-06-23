@@ -183,11 +183,12 @@ function commandGroup(mode: CommandMode): string {
 function fileActions(nextPath: string, contextPath: string): string {
   const buttons = [
     nextPath
-      ? `<button class="file-btn" data-action="openNext" data-path="${escapeHtml(nextPath)}">Open NEXT</button>`
+      ? `<button class="file-btn" data-action="openNext" data-path="${escapeHtml(nextPath)}" title="Open NEXT">NEXT</button>`
       : "",
     contextPath
-      ? `<button class="file-btn" data-action="open" data-path="${escapeHtml(contextPath)}">Open CONTEXT</button>`
+      ? `<button class="file-btn" data-action="open" data-path="${escapeHtml(contextPath)}" title="Open CONTEXT">CONTEXT</button>`
       : "",
+    nextPath ? `<button class="file-btn archive-btn" data-action="archive" title="Archive plan">Archive</button>` : "",
   ].join("");
   return buttons ? `<div class="file-actions">${buttons}</div>` : "";
 }

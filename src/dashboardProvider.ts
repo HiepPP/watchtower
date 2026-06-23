@@ -1,14 +1,18 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import * as vscode from "vscode";
 import { renderDashboardHtml, type DashboardData } from "./dashboardHtml.ts";
 import { listArchive, readPlan } from "./parser.ts";
 
 interface DashboardMessage {
-  type: "open" | "openNext" | "openArchive" | "copy" | "refresh";
+  type: "open" | "openNext" | "openArchive" | "copy" | "refresh" | "archive";
   fsPath?: string;
   text?: string;
 }
+
+const execFileAsync = promisify(execFile);
 
 export class WatchtowerDashboardProvider implements vscode.WebviewViewProvider {
   private view?: vscode.WebviewView;
@@ -110,6 +114,35 @@ export class WatchtowerDashboardProvider implements vscode.WebviewViewProvider {
       case "refresh":
         this.refresh();
         break;
+      case "archive":
+        await this.archivePlan();
+        break;
+    }
+  }
+
+  private async archivePlan(): Promise<void> {
+    if (!this.rootDir) {
+      this.toast("No workspace");
+      return;
+    }
+
+    const choice = await vscode.window.showWarningMessage(
+      "Archive the active Watchtower plan?",
+      { modal: true },
+      "Archive",
+    );
+    if (choice !== "Archive") return;
+
+    const scriptPath = path.join(this.extensionUri.fsPath, "scripts", "archive-watchtower-plan.mjs");
+    try {
+      const { stdout } = await execFileAsync(process.execPath, [scriptPath, this.rootDir], {
+        cwd: this.rootDir,
+      });
+      this.refresh();
+      this.toast(stdout.trim() || "Archived");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Archive failed";
+      void vscode.window.showWarningMessage(`Watchtower: ${message}`);
     }
   }
 
@@ -139,7 +172,7 @@ function isDashboardMessage(msg: unknown): msg is DashboardMessage {
   const type = (msg as { type?: unknown }).type;
   return (
     typeof type === "string" &&
-    ["open", "openNext", "openArchive", "copy", "refresh"].includes(type)
+    ["open", "openNext", "openArchive", "copy", "refresh", "archive"].includes(type)
   );
 }
 

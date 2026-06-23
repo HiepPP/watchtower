@@ -167,8 +167,12 @@ test("file actions open NEXT and CONTEXT when both files exist", () => {
   assert.match(html, /class="file-actions"/);
   assert.match(html, /data-action="openNext" data-path="\/ws\/watchtower\/NEXT\.md"/);
   assert.match(html, /data-action="open" data-path="\/ws\/watchtower\/CONTEXT\.md"/);
-  assert.match(html, /Open NEXT/);
-  assert.match(html, /Open CONTEXT/);
+  assert.match(html, /data-action="archive"/);
+  assert.match(html, />NEXT<\/button>/);
+  assert.match(html, />CONTEXT<\/button>/);
+  assert.match(html, /title="Open NEXT"/);
+  assert.match(html, /title="Open CONTEXT"/);
+  assert.match(html, /Archive/);
 });
 
 test("blocked note shows blocked todo ids", () => {
@@ -199,16 +203,16 @@ test("copy buttons carry Codex and Claude watchtower commands", () => {
   assert.match(html, /\/watchtower/);
   assert.match(html, /Codex/);
   assert.match(html, /Claude/);
-  assert.match(html, /data-text="\$watchtower next"/);
-  assert.match(html, /data-text="\$watchtower verify"/);
-  assert.match(html, /data-text="\$watchtower implement"/);
-  assert.match(html, /data-text="\$watchtower implement with fan out subagents"/);
-  assert.match(html, /data-text="\$watchtower progress /);
-  assert.match(html, /data-text="\$watchtower archive"/);
-  assert.match(html, /data-text="\/watchtower next"/);
-  assert.match(html, /data-text="\/watchtower verify"/);
-  assert.match(html, /data-text="\/watchtower implement"/);
-  assert.match(html, /data-text="\/watchtower implement with fan out subagents"/);
-  assert.match(html, /data-text="\/watchtower progress /);
-  assert.match(html, /data-text="\/watchtower archive"/);
+  assert.match(html, /data-text="\$watchtower next\n"/);
+  assert.match(html, /data-text="\$watchtower verify\n"/);
+  assert.match(html, /data-text="\$watchtower implement\n"/);
+  assert.match(html, /data-text="\$watchtower implement with fan out subagents\n"/);
+  assert.match(html, /data-text="\$watchtower progress \n"/);
+  assert.match(html, /data-text="\$watchtower archive\n"/);
+  assert.match(html, /data-text="\/watchtower next\n"/);
+  assert.match(html, /data-text="\/watchtower verify\n"/);
+  assert.match(html, /data-text="\/watchtower implement\n"/);
+  assert.match(html, /data-text="\/watchtower implement with fan out subagents\n"/);
+  assert.match(html, /data-text="\/watchtower progress \n"/);
+  assert.match(html, /data-text="\/watchtower archive\n"/);
 });

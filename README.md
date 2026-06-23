@@ -107,6 +107,8 @@ The skill writes Markdown. The VS Code extension only displays it.
 |---|---|---|
 | Create a plan | `/watchtower new <summary>` | Creates `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, and TODO specs |
 | Ask what to do next | `/watchtower next` or `what next?` | Reads the Tracker and proposes the next TODO |
+| Research the code | `/watchtower research "<question>"` | Maps the codebase with `/voyager`, writes findings to `watchtower/RESEARCH.md` and `research/` sidecars. Read-only, never touches code |
+| Research with agents | `/watchtower research team "<q1>" "<q2>"` | Same, but runs one search subagent per question, then shuts them down |
 | Update status | `/watchtower progress <summary>` | Updates Tracker status and TODO Outcome notes |
 | Run checks | `/watchtower verify` | Runs TODO checks and marks passing TODOs as `DONE` |
 | Build work | `/watchtower implement` | Builds the current TODO and records the real result |
@@ -132,6 +134,7 @@ Use `--repo <path>` when your shell is not already inside the target repo:
 The skill keeps active work in `watchtower/NEXT.md`.
 It writes TODO details under `watchtower/todos/`.
 It moves finished plans into `watchtower/archive/`.
+`research` is read-only and standalone. It maps codebase questions into `watchtower/RESEARCH.md` (an index) plus per-question sidecars under `watchtower/research/`, and never writes code or edits your plan.
 
 ## Expected Plan Layout
 

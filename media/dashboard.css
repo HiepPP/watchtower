@@ -232,7 +232,7 @@ body {
 /* File actions */
 .file-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin-bottom: 8px;
 }
@@ -246,7 +246,10 @@ body {
   color: var(--vscode-foreground);
   cursor: pointer;
   font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   line-height: 1.2;
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -254,6 +257,10 @@ body {
 
 .file-btn:hover {
   background: var(--surface-strong);
+}
+
+.archive-btn {
+  color: var(--archive);
 }
 
 /* Commands */
