@@ -67,8 +67,10 @@ document.addEventListener("click", (e) => {
     return;
   }
 
+  const menu = e.target.closest(".row-menu");
   const el = e.target.closest("[data-action]");
   if (!el) return;
+  if (menu && !menu.contains(el)) return;
   const action = el.dataset.action;
   switch (action) {
     case "open":
@@ -78,6 +80,7 @@ document.addEventListener("click", (e) => {
       break;
     case "copy":
       vscode.postMessage({ type: "copy", text: el.dataset.text ?? "" });
+      if (menu) menu.open = false;
       break;
     case "archive":
       vscode.postMessage({ type: "archive" });
@@ -90,8 +93,10 @@ document.addEventListener("click", (e) => {
 
 document.addEventListener("keydown", (e) => {
   if (!isActivator(e)) return;
+  const menu = e.target.closest(".row-menu");
   const el = e.target.closest('[role="button"][data-action]');
   if (!el) return;
+  if (menu && !menu.contains(el)) return;
   e.preventDefault();
   el.click();
 });

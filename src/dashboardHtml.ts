@@ -70,10 +70,21 @@ function progressState(plan: Plan): "done" | "blocked" | "open" {
 function todoRow(todo: Todo): string {
   const title = todo.title || todo.id;
   const statusLabel = todo.status === "IN_PROGRESS" ? "Active" : todo.status.toLowerCase().replace("_", " ");
+  const codexCommand = `$watchtower implement ${todo.id}\n`;
+  const claudeCommand = `/watchtower implement ${todo.id}\n`;
+  const rowMenu =
+    `<details class="row-menu">` +
+    `<summary class="row-menu-toggle" aria-label="${escapeHtml(`${todo.id} actions`)}" title="TODO actions">...</summary>` +
+    `<div class="row-menu-popover">` +
+    `<button class="row-menu-item" type="button" data-action="copy" data-text="${escapeHtml(codexCommand)}" title="Copy ${escapeHtml(codexCommand.trim())}">Codex</button>` +
+    `<button class="row-menu-item" type="button" data-action="copy" data-text="${escapeHtml(claudeCommand)}" title="Copy ${escapeHtml(claudeCommand.trim())}">Claude</button>` +
+    `</div>` +
+    `</details>`;
   const rowInner =
     `<span class="id">${escapeHtml(todo.id)}</span>` +
     `<span class="ttl">${escapeHtml(title)}</span>` +
-    `<span class="row-status ${statusClass(todo.status)}">${escapeHtml(statusLabel)}</span>`;
+    `<span class="row-status ${statusClass(todo.status)}">${escapeHtml(statusLabel)}</span>` +
+    rowMenu;
   if (todo.specPath) {
     return (
       `<div class="row" data-action="open" data-path="${escapeHtml(todo.specPath)}" tabindex="0" role="button">` +

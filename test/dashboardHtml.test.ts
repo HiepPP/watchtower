@@ -154,6 +154,26 @@ test("spec paths are wired as data-path on todo rows", () => {
   assert.match(html, /data-action="open" data-path="\/ws\/watchtower\/todos\/TODO-002-quiz\.md"/);
 });
 
+test("todo rows expose row menu implement copy commands", () => {
+  const plan = makePlan([
+    makeTodo("TODO-002", 2, "IN_PROGRESS", "/ws/watchtower/todos/TODO-002-quiz.md", "quiz"),
+  ]);
+  const html = renderDashboardHtml(data(plan));
+  assert.match(html, /class="row-menu"/);
+  assert.match(html, /data-text="\$watchtower implement TODO-002\n"/);
+  assert.match(html, /data-text="\/watchtower implement TODO-002\n"/);
+  assert.match(html, /title="Copy \$watchtower implement TODO-002"/);
+});
+
+test("todo row implement copy commands escape todo ids", () => {
+  const plan = makePlan([
+    makeTodo('TODO-006" onclick="x', 6, "TODO", null, "quoted"),
+  ]);
+  const html = renderDashboardHtml(data(plan));
+  assert.ok(!html.includes('data-text="$watchtower implement TODO-006" onclick="x'));
+  assert.match(html, /data-text="\$watchtower implement TODO-006&quot; onclick=&quot;x\n"/);
+});
+
 test("archive rows use openArchive action with manifest path", () => {
   const archive: ArchivePlan[] = [
     { slug: "s1", manifestPath: "/ws/watchtower/archive/s1/NEXT.md" },
