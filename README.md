@@ -11,7 +11,7 @@ A VS Code sidebar that stands guard over your `watchtower/` plan files and repor
 
 Think of it as a loyal sentry on the wall. It tallies your progress, flags the TODOs rotting in the dungeon, digs up old plans from the archive, and hands you copy-ready commands. It only ever looks. Your Markdown sleeps safe.
 
-<!-- Demo: replace with a screenshot or GIF of the Watchtower sidebar in action. -->
+![Watchtower dashboard UI](media/watchtower-dashboard.png)
 
 ## Table of Contents
 
