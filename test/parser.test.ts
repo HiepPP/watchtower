@@ -117,6 +117,51 @@ test("parsePlanContent resolves markdown-link Spec cells (active-plan form)", ()
   assert.equal(plan.todos[0].outcomePath, null);
 });
 
+test("parsePlanContent derives todo id from Spec when TODO cell is title only", () => {
+  const content = [
+    "# NEXT",
+    "",
+    "## Current Active Plan",
+    "",
+    "- Title: Title Only",
+    "- Slug: 20260101-title-only",
+    "- Status: ACTIVE",
+    "- Updated: 2026-01-01",
+    "",
+    "## Tracker",
+    "",
+    "| Order | TODO | Group | Status | Spec | Deps | Context | Notes |",
+    "|-------|------|-------|--------|------|------|---------|-------|",
+    "| 4 | Show TODO code in rows | A | TODO | [watchtower/todos/TODO-004-show-todo-code-in-rows.md](watchtower/todos/TODO-004-show-todo-code-in-rows.md) | - | - | title-only cell |",
+  ].join("\n");
+  const plan = parsePlanContent(content, "/ws/watchtower/NEXT.md");
+  assert.equal(plan.todos[0].id, "TODO-004");
+  assert.equal(plan.todos[0].title, "Show TODO code in rows");
+  assert.equal(plan.todos[0].specPath, "/ws/watchtower/todos/TODO-004-show-todo-code-in-rows.md");
+});
+
+test("parsePlanContent falls back to padded order when TODO cell and Spec lack id", () => {
+  const content = [
+    "# NEXT",
+    "",
+    "## Current Active Plan",
+    "",
+    "- Title: Order Fallback",
+    "- Slug: 20260101-order-fallback",
+    "- Status: ACTIVE",
+    "- Updated: 2026-01-01",
+    "",
+    "## Tracker",
+    "",
+    "| Order | TODO | Group | Status | Spec | Deps | Context | Notes |",
+    "|-------|------|-------|--------|------|------|---------|-------|",
+    "| 5 | Row title | A | TODO | watchtower/todos/row-title.md | - | - | no code |",
+  ].join("\n");
+  const plan = parsePlanContent(content, "/ws/watchtower/NEXT.md");
+  assert.equal(plan.todos[0].id, "TODO-005");
+  assert.equal(plan.todos[0].title, "Row title");
+});
+
 test("parsePlanContent resolves existing outcome files beside TODO specs", () => {
   const root = mkdtempSync(join(tmpdir(), "watchtower-parser-"));
   const todosDir = join(root, "watchtower", "todos");

@@ -1,6 +1,6 @@
 ---
 name: watchtower
-description: Use when creating, updating, archiving, reviewing, verifying, researching, implementing, or asking what to do next on repo-local TODO plans in watchtower/NEXT.md. implement reads NEXT.md, then loads only current TODO specs and required shared context; outcome files are opt-in only. research maps codebase questions via /voyager into watchtower/RESEARCH.md, read-only re code. Also triggers on "what next?" during repo work.
+description: Use when creating, updating, archiving, reviewing, verifying, researching, implementing, or asking what to do next on repo-local TODO plans in watchtower/NEXT.md. implement reads NEXT.md, then loads all remaining non-DONE TODO specs in Tracker order plus required shared context; outcome files are opt-in only. research maps codebase questions via /voyager into watchtower/RESEARCH.md, read-only re code. Also triggers on "what next?" during repo work.
 argument-hint: "[new|progress|archive|verify|next|research|research team|implement|implement team] [--repo path] [summary]"
 disable-model-invocation: false
 user-invocable: true
@@ -32,7 +32,7 @@ Use `$ARGUMENTS` to classify request. Details links to mode flow; dash means tab
 | `next` | Read active plan and propose next action from Tracker | nothing | [Propose Next](#propose-next) |
 | `research` | Map 1+ codebase questions via /voyager, write findings | `RESEARCH.md` + `research/` sidecars | [Map Research](#map-research) |
 | `research team` | Same as `research`, but one search subagent per question, then auto shut down every spawned agent | `RESEARCH.md` + `research/` sidecars | [Map Research](#map-research) |
-| `implement` | Load current TODO specs plus required context, then build sequentially in this session | code + plan files + TODO outcome sidecars | [Implement](#implement) |
+| `implement` | Load all remaining non-DONE TODO specs plus required context, then build sequentially in this session | code + plan files + TODO outcome sidecars | [Implement](#implement) |
 | `implement team` | Same as `implement`, but build with a team of subagents, then auto shut down every spawned background agent. Triggers include `team` and `fan out subagents` | code + plan files | [Implement](#implement) |
 
 `--repo path` is a modifier, not a mode: use given repository instead of current git root.
@@ -76,7 +76,9 @@ Honor these in `new` and `implement`.
 
 ## Author Plan
 
-Use for `new`. Create fresh plan when none exists, or add TODOs to active plan. When writing a TODO, explore installed skills that fit its work (see `references/skill-routing.md`) and name any that fits in Brief or Prompt.
+Use for `new`. Create fresh plan when none exists, or add TODOs to active plan. When writing a TODO, explore installed skills that fit its work (see `references/skill-routing.md`) and name any that fits in Brief or Prompt only when it changes how implementer should work.
+
+Skill naming rule: use skill names sparingly. Name a skill only when it gives needed process, tools, or domain rules beyond normal implementation. Use `/solve` only for root-cause bugs, unclear code paths, multi-file behavior changes, or regression-risk work. Do not name `/solve` for simple copy edits, command-list additions, small CSS tweaks, file-only updates, or obvious one-file changes. If unsure, write Prompt without skill name; implementer can invoke a skill later if investigation becomes necessary.
 
 1. Decide by file presence:
    - `watchtower/NEXT.md` absent -> CREATE.
@@ -170,8 +172,8 @@ Use for `implement` and `implement team`. This is only mode that writes code. Ho
 
 Two execution modes, same goal and same steps 1-9:
 
-- `implement` (default): build the current work set yourself, sequentially in this session, one TODO at a time.
-- `implement team`: build the current work set with a team of subagents (Agent tool), then run Team Cleanup (step 11). Dispatch rules:
+- `implement` (default): build every remaining non-DONE TODO yourself, sequentially in this session, one TODO at a time, from lowest Order to highest Order.
+- `implement team`: build every remaining non-DONE TODO with a team of subagents (Agent tool), then run Team Cleanup (step 11). Dispatch rules:
   - Group TODOs that edit the same file go to ONE builder subagent. Never run parallel file-editing subagents on the same file; they clobber each other.
   - Independent work (no shared files) may run as parallel builders.
   - Add read-only reviewer subagents (parallel) and an optional fix pass when useful.
@@ -179,21 +181,23 @@ Two execution modes, same goal and same steps 1-9:
 
 1. Read latest `watchtower/NEXT.md`. If absent, report no active plan and offer to start one with `new`. Stop.
 2. Read project rules first: `AGENTS.md` or `CLAUDE.md`, `DESIGN.md`, and any `.cursor/rules/` that apply. Honor every working rule, validation matrix, and DESIGN.md-first constraint.
-3. Parse `## Tracker` table. Pick seed row by priority: lowest-Order IN PROGRESS, else lowest-Order TODO. If seed row Group is not `standalone`, the current work set is every non-DONE row with that same Group, sorted by Order. If Group is `standalone`, current work set is the seed row only.
+3. Parse `## Tracker` table. Current work set is every non-DONE row, sorted by Order from lowest to highest. Include `IN PROGRESS`, `TODO`, and `BLOCKED` rows. Do not stop after `TODO-001`, and do not limit work to one Group or `standalone` row. Start with lowest-Order `IN PROGRESS` when present; otherwise start with lowest-Order `TODO`. If a `BLOCKED` row is reached, keep it blocked unless the plan or user gives enough information to unblock it.
 4. Reconcile plan vs reality before coding. If plan state, target, or TODO conflicts with shipped work, or an Open Decisions item is unresolved, stop and surface it with `AskUserQuestion`. Do not overwrite shipped work plan misdescribes.
 5. New format load set:
-   - Read each current work set row's `Spec` file in full.
-   - Read `watchtower/CONTEXT.md` once when any current work set row's `Context` column requires it.
-   - For each current work set row's `Deps` entry, resolve TODO ids through Tracker `Spec` only to confirm dependency status and file identity. Do not read dependency outcome sidecars by default, even when they exist.
+   - Read each non-DONE row's `Spec` file in full, in Tracker Order.
+   - Read `watchtower/CONTEXT.md` once when any non-DONE row's `Context` column requires it.
+   - For each non-DONE row's `Deps` entry, resolve TODO ids through Tracker `Spec` only to confirm dependency status and file identity. Do not read dependency outcome sidecars by default, even when they exist.
    - Read outcome sidecars only when the user's `implement` prompt explicitly asks for them, for example "read outcomes", "use previous outcomes", or "synthesize from outcomes". If explicit, read only matching `watchtower/todos/TODO-NNN-outcome.md` files, never full dependency TODO specs unless the prompt also asks for them.
    - Do not read full TODO files for `DONE` rows.
 6. Legacy format load set: read inline TODO sections in Tracker order, skipping `DONE` items, using old flow.
-7. For current work set:
+7. For each non-DONE TODO in Tracker Order:
    - Treat `## Brief` and any Prompt block as implementer brief. If Prompt names a skill, invoke it.
    - Run impact analysis required by project rules before editing a symbol, for example GitNexus `impact`. Warn user on HIGH or CRITICAL risk before proceeding. For edits with no symbol, like page template, CSS, asset, or docs, note that no symbol-level impact applies and proceed.
-   - Read every file each TODO touches before editing. Never edit blind. Keep changes scoped to current work set.
-   - Mark current work set rows `IN PROGRESS`, do work, then run each TODO's `## Verify` checks.
-   - Mark each row `DONE` only after its verification passes and matching `TODO-NNN-outcome.md` is written with `Status: DONE`, `Changed`, `Contract`, and `Verified`. Record blockers in the outcome sidecar as `BLOCKED` with reason.
+   - Read every file the current TODO touches before editing. Never edit blind. Keep changes scoped to the current TODO and required dependency fixes.
+   - Mark the current row `IN PROGRESS`, do work, then run that TODO's `## Verify` checks.
+   - Mark current row `DONE` only after its verification passes and matching `TODO-NNN-outcome.md` is written with `Status: DONE`, `Changed`, `Contract`, and `Verified`.
+   - Continue to the next non-DONE row after a row is marked `DONE`.
+   - If a row fails verification or cannot proceed, record blocker in the outcome sidecar as `BLOCKED` with reason, update Tracker, stop the sequence, and report next decision needed.
 8. Run `## Plan Verify` commands in `watchtower/NEXT.md` when present. Fix failures before claiming done. Report real outcomes.
 9. Update Tracker statuses, plan-level `Status:` header, and `## Handoff` to reflect what shipped. Do not archive unless user asks.
 10. Do not commit or push unless user asks. If asked, follow repo commit flow and run required pre-commit checks, for example `gitnexus_detect_changes()`.
@@ -354,7 +358,7 @@ Discrepancy: <N found / none>. One line, plan vs shipped across plan.
 - `verify` promotes TODO to `DONE` only when all `## Verify` checks pass live and the outcome sidecar is updated. It never sets `IN PROGRESS` or `BLOCKED`.
 - `verify` writes `## Outcome` in `watchtower/todos/TODO-NNN-outcome.md`, never in the TODO spec file.
 - `implement` does not read outcome sidecars by default, even when they exist. It reads them only when the user's implement prompt explicitly asks for outcome context.
-- `implement` builds sequentially in-session. `implement team` builds with subagents and MUST run Team Cleanup at the end: shut down every spawned background agent. Same-file work goes to one builder; never parallel-edit one file.
+- `implement` builds all remaining non-DONE TODOs sequentially in-session, from lowest Order to highest Order, until every row is `DONE` or one row is `BLOCKED`. It does not stop after the first TODO. `implement team` builds with subagents and MUST run Team Cleanup at the end: shut down every spawned background agent. Same-file work goes to one builder; never parallel-edit one file.
 - `archive` moves `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, `watchtower/todos/`, `watchtower/RESEARCH.md`, `watchtower/research/`, and any legacy `watchtower/NEXT.VERIFY.md` to `watchtower/archive/<slug>/`.
 - `archive` revises session and writes one overall `watchtower/archive/<slug>/LEARN.md`: per-TODO plan vs shipped with mistake/cause/fix, plan-level cross-TODO issues, lessons. Always write it; write `none`/`match` when no discrepancy.
 - `archive` MUST NOT guess or derive slug. If `Slug:` is missing or empty, stop before moving files.

@@ -7,7 +7,7 @@ import { renderDashboardHtml, type DashboardData } from "./dashboardHtml.ts";
 import { listArchive, readPlan } from "./parser.ts";
 
 interface DashboardMessage {
-  type: "open" | "openNext" | "openArchive" | "copy" | "refresh" | "archive";
+  type: "open" | "openNext" | "openArchive" | "copy" | "insert" | "refresh" | "archive";
   fsPath?: string;
   text?: string;
 }
@@ -111,6 +111,9 @@ export class WatchtowerDashboardProvider implements vscode.WebviewViewProvider {
           this.toast("Copied");
         }
         break;
+      case "insert":
+        if (typeof msg.text === "string") await this.insertCommandText(msg.text);
+        break;
       case "refresh":
         this.refresh();
         break;
@@ -162,6 +165,27 @@ export class WatchtowerDashboardProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  private async insertCommandText(text: string): Promise<void> {
+    if (!text) return;
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+      await editor.edit((edit) => {
+        edit.insert(editor.selection.active, text);
+      });
+      this.toast("Inserted");
+      return;
+    }
+
+    if (vscode.window.activeTerminal) {
+      vscode.window.activeTerminal.sendText(text, false);
+      this.toast("Inserted");
+      return;
+    }
+
+    await vscode.env.clipboard.writeText(text);
+    this.toast("Copied");
+  }
+
   private toast(text: string): void {
     this.view?.webview.postMessage({ type: "toast", text });
   }
@@ -172,7 +196,7 @@ function isDashboardMessage(msg: unknown): msg is DashboardMessage {
   const type = (msg as { type?: unknown }).type;
   return (
     typeof type === "string" &&
-    ["open", "openNext", "openArchive", "copy", "refresh", "archive"].includes(type)
+    ["open", "openNext", "openArchive", "copy", "insert", "refresh", "archive"].includes(type)
   );
 }
 

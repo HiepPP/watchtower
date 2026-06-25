@@ -10,12 +10,19 @@ export interface DashboardData {
 type CommandMode = "codex" | "claude";
 
 const COMMANDS = [
+  { label: "add new", action: "new", suffix: " " },
   { label: "implement", action: "implement" },
   { label: "implement subagents", action: "implement with fan out subagents" },
+  { label: "research", action: "research" },
   { label: "next", action: "next" },
   { label: "verify", action: "verify" },
   { label: "progress", action: "progress", suffix: " " },
   { label: "archive", action: "archive" },
+];
+
+const EMPTY_COMMANDS = [
+  { label: "new", action: "new" },
+  { label: "research", action: "research" },
 ];
 
 const STATUS_SECTION_ORDER: { status: TodoStatus; label: string }[] = [
@@ -169,7 +176,7 @@ function commandButtons(mode: CommandMode): string {
       // Copy the command with a trailing newline so it runs on paste.
       const copyText = `${command}\n`;
       return (
-        `<button class="cmd-btn" data-action="copy" data-text="${escapeHtml(copyText)}" title="Copy ${escapeHtml(command)}">` +
+        `<button class="cmd-btn" data-action="copy" data-text="${escapeHtml(copyText)}" data-drag-text="${escapeHtml(command)}" draggable="true" title="Copy ${escapeHtml(command)}">` +
       `${escapeHtml(cmd.label)}` +
         `</button>`
       );
@@ -269,22 +276,30 @@ function emptyState(nextPath: string): string {
     `<rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/>` +
     `<path d="M3.5 10.5h-1A1.5 1.5 0 0 1 1 9V2.5A1.5 1.5 0 0 1 2.5 1H9a1.5 1.5 0 0 1 1.5 1.5v1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
     `</svg>`;
-  const copyButtons = [
-    { mode: "Codex", prefix: "$watchtower" },
-    { mode: "Claude", prefix: "/watchtower" },
-  ]
-    .map(({ mode, prefix }) => {
-      const label = `${prefix} new`;
-      // Copy a runnable command stub: prefix + "new" + newline, no <summary>.
-      const copyText = `${label}\n`;
+  const copyButtons = (["codex", "claude"] as CommandMode[])
+    .map((mode) => {
+      const prefix = commandPrefix(mode);
+      const modeLabel = commandModeLabel(mode);
+      const buttons = EMPTY_COMMANDS.map((cmd) => {
+        const label = `${prefix} ${cmd.action}`;
+        const copyText = `${label}\n`;
+        return (
+          `<button class="copy-cmd" data-action="copy" data-text="${escapeHtml(copyText)}" data-drag-text="${escapeHtml(label)}" draggable="true" title="Copy ${escapeHtml(label)} for ${escapeHtml(modeLabel)}">` +
+          `<span class="copy-cmd-label">` +
+          `<span class="copy-cmd-text">${escapeHtml(label)}</span>` +
+          `</span>` +
+          copyIcon +
+          `</button>`
+        );
+      }).join("");
       return (
-        `<button class="copy-cmd" data-action="copy" data-text="${escapeHtml(copyText)}" title="Copy ${escapeHtml(label)} for ${escapeHtml(mode)}">` +
-        `<span class="copy-cmd-label">` +
-        `<span class="copy-cmd-mode">${escapeHtml(mode)}</span>` +
-        `<span class="copy-cmd-text">${escapeHtml(label)}</span>` +
-        `</span>` +
-        copyIcon +
-        `</button>`
+        `<div class="empty-command-group">` +
+        `<div class="empty-command-head">` +
+        `<span class="copy-cmd-mode">${escapeHtml(modeLabel)}</span>` +
+        `<span class="cmd-prefix">${escapeHtml(prefix)}</span>` +
+        `</div>` +
+        buttons +
+        `</div>`
       );
     })
     .join("");
@@ -292,7 +307,7 @@ function emptyState(nextPath: string): string {
     `<div class="empty">` +
     `<div class="empty-title">No active plan</div>` +
     `<div class="empty-sub">No watchtower/NEXT.md found in this workspace.</div>` +
-    `<div class="empty-hint">Copy a command to start a new plan:</div>` +
+    `<div class="empty-hint">Copy a command to work with plans:</div>` +
     `<div class="empty-actions">${copyButtons}</div>` +
     (nextPath
       ? `<button class="cmd-btn" data-action="openNext" data-path="${escapeHtml(nextPath)}">Open NEXT.md</button>`

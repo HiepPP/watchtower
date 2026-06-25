@@ -126,8 +126,15 @@ test("progress state color follows open, blocked, and done state", () => {
 test("null plan shows empty state", () => {
   const html = renderDashboardHtml(data(null));
   assert.match(html, /No active plan/);
+  assert.match(html, /empty-command-group/);
+  assert.match(html, /Codex/);
+  assert.match(html, /Claude/);
   assert.match(html, /\$watchtower new/);
+  assert.match(html, /\$watchtower research/);
   assert.match(html, /\/watchtower new/);
+  assert.match(html, /\/watchtower research/);
+  assert.match(html, /data-text="\$watchtower new\n" data-drag-text="\$watchtower new" draggable="true"/);
+  assert.match(html, /data-text="\/watchtower research\n" data-drag-text="\/watchtower research" draggable="true"/);
 });
 
 test("null plan without nextPath hides Open NEXT.md button", () => {
@@ -163,6 +170,15 @@ test("todo rows expose row menu implement copy commands", () => {
   assert.match(html, /data-text="\$watchtower implement TODO-002\n"/);
   assert.match(html, /data-text="\/watchtower implement TODO-002\n"/);
   assert.match(html, /title="Copy \$watchtower implement TODO-002"/);
+});
+
+test("todo row renders canonical id and readable title", () => {
+  const plan = makePlan([
+    makeTodo("TODO-007", 7, "TODO", "/ws/watchtower/todos/TODO-007-title-only.md", "Title only tracker cell"),
+  ]);
+  const html = renderDashboardHtml(data(plan));
+  assert.match(html, /<span class="id">TODO-007<\/span>/);
+  assert.match(html, /<span class="ttl">Title only tracker cell<\/span>/);
 });
 
 test("todo row implement copy commands escape todo ids", () => {
@@ -227,12 +243,16 @@ test("copy buttons carry Codex and Claude watchtower commands", () => {
   assert.match(html, /data-text="\$watchtower verify\n"/);
   assert.match(html, /data-text="\$watchtower implement\n"/);
   assert.match(html, /data-text="\$watchtower implement with fan out subagents\n"/);
+  assert.match(html, /data-text="\$watchtower research\n"/);
   assert.match(html, /data-text="\$watchtower progress \n"/);
   assert.match(html, /data-text="\$watchtower archive\n"/);
   assert.match(html, /data-text="\/watchtower next\n"/);
   assert.match(html, /data-text="\/watchtower verify\n"/);
   assert.match(html, /data-text="\/watchtower implement\n"/);
   assert.match(html, /data-text="\/watchtower implement with fan out subagents\n"/);
+  assert.match(html, /data-text="\/watchtower research\n"/);
   assert.match(html, /data-text="\/watchtower progress \n"/);
   assert.match(html, /data-text="\/watchtower archive\n"/);
+  assert.match(html, /data-text="\$watchtower research\n" data-drag-text="\$watchtower research" draggable="true"/);
+  assert.match(html, /data-text="\/watchtower research\n" data-drag-text="\/watchtower research" draggable="true"/);
 });

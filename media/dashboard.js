@@ -3,6 +3,7 @@ const vscode = acquireVsCodeApi();
 const toast = document.getElementById("toast");
 let toastTimer = 0;
 const state = vscode.getState() || { collapsed: {} };
+let draggedCommandText = "";
 
 // Persist scroll across wholesale HTML re-renders (refresh() rewrites webview.html).
 // vscode state survives re-renders, so restoring on script load keeps position.
@@ -99,6 +100,23 @@ document.addEventListener("keydown", (e) => {
   if (menu && !menu.contains(el)) return;
   e.preventDefault();
   el.click();
+});
+
+document.addEventListener("dragstart", (e) => {
+  const el = e.target.closest('[draggable="true"][data-text]');
+  if (!el || !e.dataTransfer) return;
+  const text = el.dataset.dragText || el.dataset.text || "";
+  draggedCommandText = text;
+  e.dataTransfer.setData("text/plain", text);
+  e.dataTransfer.setData("text", text);
+  e.dataTransfer.setData("Text", text);
+  e.dataTransfer.effectAllowed = "copy";
+});
+
+document.addEventListener("dragend", () => {
+  if (!draggedCommandText) return;
+  vscode.postMessage({ type: "insert", text: draggedCommandText });
+  draggedCommandText = "";
 });
 
 window.addEventListener("message", (e) => {

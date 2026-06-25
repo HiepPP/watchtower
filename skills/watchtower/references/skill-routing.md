@@ -14,7 +14,7 @@ slash skill name.
 | Skill | Use it when a TODO needs |
 |-------|--------------------------|
 | /voyager | Find code by meaning - "where is X", "how does Y work", "what depends on Z". |
-| /solve | Fix hard bug or make multi-file change that needs investigation and root-cause analysis. |
+| /solve | Fix bug or make multi-file behavior change that needs investigation, root-cause analysis, or regression tracing. Do not use for simple one-file edits, copy changes, command label additions, small CSS tweaks, or obvious test updates. |
 | /sequential-thinking | Break down complex, fuzzy, or multi-step problem before coding. |
 | /qmd | Search markdown notes, docs, or knowledge base. Not code, not web. |
 
@@ -42,5 +42,6 @@ Full guide (source, may be updated): `/Users/hiep/Library/Mobile Documents/iClou
 
 - While writing a TODO (`new`), explore skills that fit its work - this list plus the
   session's available skills.
-- If one fits, name it in that TODO's `Prompt`, for example: "Use /solve to ...".
+- If one fits and changes how implementer should work, name it in that TODO's `Prompt`, for example: "Use /solve to ...".
+- If change is small or obvious, write plain Prompt without skill name.
 - If none fit, write the Prompt without a skill. Do not force one.

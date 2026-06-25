@@ -1,0 +1,33 @@
+# NEXT
+
+## Current Active Plan
+
+- Title: Dashboard Command And Row Fixes
+- Slug: 20260625-dashboard-command-groups-and-drag
+- Status: ARCHIVED
+- Updated: 2026-06-25
+
+## Tracker
+
+| Order | TODO | Group | Status | Spec | Deps | Context | Notes |
+|-------|------|-------|--------|------|------|---------|-------|
+| 1 | TODO-001 Add research command | commands | DONE | [watchtower/todos/TODO-001-add-research-command.md](watchtower/todos/TODO-001-add-research-command.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Research command shipped. |
+| 2 | TODO-002 Group empty commands by agent | commands | DONE | [watchtower/todos/TODO-002-group-empty-commands-by-agent.md](watchtower/todos/TODO-002-group-empty-commands-by-agent.md) | TODO-001 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Empty state groups shipped. |
+| 3 | TODO-003 Drag commands as text | commands | DONE | [watchtower/todos/TODO-003-drag-commands-as-text.md](watchtower/todos/TODO-003-drag-commands-as-text.md) | TODO-002 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Drag text payload shipped. |
+| 4 | TODO-004 Show TODO code in rows | commands | DONE | [watchtower/todos/TODO-004-show-todo-code-in-rows.md](watchtower/todos/TODO-004-show-todo-code-in-rows.md) | TODO-003 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Row id shows TODO code. |
+
+## Plan Verify
+
+- `npm test` -> all tests pass.
+- `npm run compile` -> TypeScript and bundle pass.
+- `bash scripts/build-and-install.sh` -> VSIX builds and installs into VS Code.
+- Manual VS Code check -> no active plan empty state shows Codex and Claude command groups, includes `watchtower research`, and dragged command drops as text into terminal/editor.
+- Manual VS Code check -> TODO list id column always shows `TODO-NNN`, even when Tracker TODO cell holds only title text.
+
+## Handoff
+
+- Next action: reload VS Code window if current window still shows old extension host. Then archive plan when ready.
+
+## Archive
+
+- Archived: 2026-06-25 -> [watchtower/archive/20260625-dashboard-command-groups-and-drag/](watchtower/archive/20260625-dashboard-command-groups-and-drag/)

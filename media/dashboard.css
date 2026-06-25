@@ -333,6 +333,16 @@ body {
   white-space: nowrap;
 }
 
+.cmd-btn[draggable="true"],
+.copy-cmd[draggable="true"] {
+  cursor: grab;
+}
+
+.cmd-btn[draggable="true"]:active,
+.copy-cmd[draggable="true"]:active {
+  cursor: grabbing;
+}
+
 .cmd-btn:hover {
   background: var(--vscode-button-secondaryHoverBackground, var(--vscode-toolbar-hoverBackground));
   border-color: var(--line);
@@ -544,9 +554,27 @@ body {
 .empty-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   max-width: 240px;
   margin: 0 auto 16px;
+}
+
+.empty-command-group {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.empty-command-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
 }
 
 .copy-cmd {
