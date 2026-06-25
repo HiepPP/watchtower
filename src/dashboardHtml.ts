@@ -10,12 +10,12 @@ export interface DashboardData {
 type CommandMode = "codex" | "claude";
 
 const COMMANDS = [
-  { label: "add new", action: "new", suffix: " " },
-  { label: "implement", action: "implement" },
-  { label: "implement subagents", action: "implement with fan out subagents" },
-  { label: "research", action: "research" },
-  { label: "next", action: "next" },
-  { label: "verify", action: "verify" },
+  { label: "new", action: "add new todo", suffix: " " },
+  { label: "implement", action: "implement all", suffix: " "  },
+  { label: "implement subagents", action: "implement with fan out subagents", suffix: " "  },
+  { label: "research", action: "research", suffix: " "  },
+  { label: "next", action: "next", suffix: " "  },
+  { label: "verify", action: "verify", suffix: " "  },
   { label: "progress", action: "progress", suffix: " " },
   { label: "archive", action: "archive" },
 ];
@@ -169,7 +169,7 @@ function commandModeLabel(mode: CommandMode): "Codex" | "Claude" {
 }
 
 function commandButtons(mode: CommandMode): string {
-  const prefix = commandPrefix(mode);
+  const prefix = 'watchtower';
   return COMMANDS.map(
     (cmd) => {
       const command = `${prefix} ${cmd.action}${cmd.suffix ?? ""}`;
