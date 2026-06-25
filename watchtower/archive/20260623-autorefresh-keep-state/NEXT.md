@@ -11,11 +11,11 @@
 
 One row per TODO. Group ties together items that ship as one transaction.
 
-| Order | TODO | Group | Status | Spec | Deps | Context | Notes |
+| Order | TASK | Group | Status | Spec | Deps | Context | Notes |
 |-------|------|-------|--------|------|------|---------|-------|
-| 1 | TODO-001 debounce watcher fires | A | DONE | [watchtower/todos/TODO-001-debounce-watcher.md](watchtower/todos/TODO-001-debounce-watcher.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Rapid saves coalesce to one refresh. |
-| 2 | TODO-002 preserve scroll on refresh | A | DONE | [watchtower/todos/TODO-002-preserve-scroll.md](watchtower/todos/TODO-002-preserve-scroll.md) | TODO-001 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Re-render keeps scroll + collapse. |
-| 3 | TODO-003 keep watcher when no root | standalone | DONE | [watchtower/todos/TODO-003-watcher-no-root.md](watchtower/todos/TODO-003-watcher-no-root.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Multi-root gap; watcher binds on first resolve. |
+| 1 | TASK-001 debounce watcher fires | A | DONE | [watchtower/tasks/TASK-001-debounce-watcher.md](watchtower/tasks/TASK-001-debounce-watcher.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Rapid saves coalesce to one refresh. |
+| 2 | TASK-002 preserve scroll on refresh | A | DONE | [watchtower/tasks/TASK-002-preserve-scroll.md](watchtower/tasks/TASK-002-preserve-scroll.md) | TASK-001 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Re-render keeps scroll + collapse. |
+| 3 | TASK-003 keep watcher when no root | standalone | DONE | [watchtower/tasks/TASK-003-watcher-no-root.md](watchtower/tasks/TASK-003-watcher-no-root.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Multi-root gap; watcher binds on first resolve. |
 
 TODO Status labels: TODO, IN PROGRESS, BLOCKED, DONE.
 Plan-level Status header: ACTIVE while any row is open, DONE when all rows DONE, ARCHIVED after archive.

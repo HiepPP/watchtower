@@ -76,15 +76,15 @@ Run it automatically, without asking, after any of these:
 bash scripts/sync-global-watchtower-skill.sh
 ```
 
-## Mock TODO Data
+## Mock Task Data
 
-- Mock Watchtower data lives in `mock-todo/`.
-- When user says "need mock data" or "can mock data", copy `mock-todo/` contents into current `watchtower/` folder.
+- Mock Watchtower data lives in `mock-task/`.
+- When user says "need mock data" or "can mock data", copy `mock-task/` contents into current `watchtower/` folder.
 - Create `watchtower/` if absent.
-- Do not overwrite existing `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, or `watchtower/todos/` without explicit user approval.
+- Do not overwrite existing `watchtower/NEXT.md`, `watchtower/CONTEXT.md`, or `watchtower/tasks/` without explicit user approval.
 - Use this shape when target is absent or already cleared:
 
 ```bash
 mkdir -p watchtower
-cp -R mock-todo/. watchtower/
+cp -R mock-task/. watchtower/
 ```

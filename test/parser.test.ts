@@ -1,23 +1,23 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { toTodoStatus, toPlanStatus } from "../src/model.ts";
+import { toTaskStatus, toPlanStatus } from "../src/model.ts";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
-import { parsePlanContent, parseTodoFile, readTodoFile } from "../src/parser.ts";
+import { parsePlanContent, parseTaskFile, readTaskFile } from "../src/parser.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const sampleNext = readFileSync(join(here, "fixtures", "sample-NEXT.md"), "utf8");
-const sampleTodo = readFileSync(join(here, "fixtures", "sample-todo.md"), "utf8");
+const sampleTask = readFileSync(join(here, "fixtures", "sample-task.md"), "utf8");
 
-test("toTodoStatus maps known labels", () => {
-  assert.equal(toTodoStatus("DONE"), "DONE");
-  assert.equal(toTodoStatus("IN PROGRESS"), "IN_PROGRESS");
-  assert.equal(toTodoStatus("in progress"), "IN_PROGRESS");
-  assert.equal(toTodoStatus("BLOCKED"), "BLOCKED");
-  assert.equal(toTodoStatus("TODO"), "TODO");
-  assert.equal(toTodoStatus("weird"), "UNKNOWN");
+test("toTaskStatus maps known labels", () => {
+  assert.equal(toTaskStatus("DONE"), "DONE");
+  assert.equal(toTaskStatus("IN PROGRESS"), "IN_PROGRESS");
+  assert.equal(toTaskStatus("in progress"), "IN_PROGRESS");
+  assert.equal(toTaskStatus("BLOCKED"), "BLOCKED");
+  assert.equal(toTaskStatus("TODO"), "TODO");
+  assert.equal(toTaskStatus("weird"), "UNKNOWN");
 });
 
 test("toPlanStatus maps known labels", () => {
@@ -35,33 +35,33 @@ test("parsePlanContent reads header and tracker", () => {
   assert.equal(plan.totalCount, 4);
   assert.equal(plan.doneCount, 3);
 
-  assert.equal(plan.todos.length, 4);
+  assert.equal(plan.tasks.length, 4);
   assert.deepEqual(
-    plan.todos.map((t) => t.status),
+    plan.tasks.map((t) => t.status),
     ["DONE", "DONE", "DONE", "BLOCKED"],
   );
 
-  const first = plan.todos[0];
-  assert.equal(first.id, "TODO-001");
+  const first = plan.tasks[0];
+  assert.equal(first.id, "TASK-001");
   assert.equal(first.title, "Build quiz state and markup shell");
   assert.equal(first.order, 1);
   assert.equal(first.group, "standalone");
   assert.ok(first.notes.length > 0);
   assert.equal(
     first.specPath,
-    "/ws/watchtower/todos/TODO-001-build-quiz-state-and-markup-shell.md",
+    "/ws/watchtower/tasks/TASK-001-build-quiz-state-and-markup-shell.md",
   );
 
-  const fourth = plan.todos[3];
-  assert.equal(fourth.id, "TODO-004");
+  const fourth = plan.tasks[3];
+  assert.equal(fourth.id, "TASK-004");
   assert.equal(
     fourth.specPath,
-    "/ws/watchtower/todos/TODO-004-integrate-responsive-flow-and-qa.md",
+    "/ws/watchtower/tasks/TASK-004-integrate-responsive-flow-and-qa.md",
   );
 });
 
-test("parseTodoFile finds sections and outcome status", () => {
-  const result = parseTodoFile(sampleTodo);
+test("parseTaskFile finds sections and outcome status", () => {
+  const result = parseTaskFile(sampleTask);
   const names = result.sections.map((s) => s.name);
   assert.deepEqual(names, ["Brief", "Verify", "Outcome"]);
 
@@ -75,14 +75,14 @@ test("parseTodoFile finds sections and outcome status", () => {
   assert.equal(result.outcomeStatus, "BLOCKED");
 });
 
-test("parseTodoFile returns null outcome when absent", () => {
-  const result = parseTodoFile("# TODO-009 X\n\n## Brief\n\nGoal: x.\n");
+test("parseTaskFile returns null outcome when absent", () => {
+  const result = parseTaskFile("# TASK-009 X\n\n## Brief\n\nGoal: x.\n");
   assert.equal(result.outcomeStatus, null);
   assert.deepEqual(result.sections.map((s) => s.name), ["Brief"]);
 });
 
-test("readTodoFile returns empty result for a missing file", () => {
-  const result = readTodoFile(join(here, "fixtures", "does-not-exist.md"));
+test("readTaskFile returns empty result for a missing file", () => {
+  const result = readTaskFile(join(here, "fixtures", "does-not-exist.md"));
   assert.deepEqual(result.sections, []);
   assert.equal(result.outcomeStatus, null);
 });
@@ -100,9 +100,9 @@ test("parsePlanContent resolves markdown-link Spec cells (active-plan form)", ()
     "",
     "## Tracker",
     "",
-    "| Order | TODO | Group | Status | Spec | Deps | Context | Notes |",
+    "| Order | TASK | Group | Status | Spec | Deps | Context | Notes |",
     "|-------|------|-------|--------|------|------|---------|-------|",
-    "| 1 | TODO-001 Foo | A | IN PROGRESS | [watchtower/todos/TODO-001-foo.md](watchtower/todos/TODO-001-foo.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | a note |",
+    "| 1 | TASK-001 Foo | A | IN PROGRESS | [watchtower/tasks/TASK-001-foo.md](watchtower/tasks/TASK-001-foo.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | a note |",
     "",
     "## Handoff",
     "",
@@ -111,13 +111,13 @@ test("parsePlanContent resolves markdown-link Spec cells (active-plan form)", ()
   const plan = parsePlanContent(content, "/ws/watchtower/NEXT.md");
   assert.equal(plan.status, "ACTIVE");
   assert.equal(plan.totalCount, 1);
-  assert.equal(plan.todos[0].status, "IN_PROGRESS");
-  assert.equal(plan.todos[0].group, "A");
-  assert.equal(plan.todos[0].specPath, "/ws/watchtower/todos/TODO-001-foo.md");
-  assert.equal(plan.todos[0].outcomePath, null);
+  assert.equal(plan.tasks[0].status, "IN_PROGRESS");
+  assert.equal(plan.tasks[0].group, "A");
+  assert.equal(plan.tasks[0].specPath, "/ws/watchtower/tasks/TASK-001-foo.md");
+  assert.equal(plan.tasks[0].outcomePath, null);
 });
 
-test("parsePlanContent derives todo id from Spec when TODO cell is title only", () => {
+test("parsePlanContent derives task id from Spec when TASK cell is title only", () => {
   const content = [
     "# NEXT",
     "",
@@ -130,17 +130,17 @@ test("parsePlanContent derives todo id from Spec when TODO cell is title only", 
     "",
     "## Tracker",
     "",
-    "| Order | TODO | Group | Status | Spec | Deps | Context | Notes |",
+    "| Order | TASK | Group | Status | Spec | Deps | Context | Notes |",
     "|-------|------|-------|--------|------|------|---------|-------|",
-    "| 4 | Show TODO code in rows | A | TODO | [watchtower/todos/TODO-004-show-todo-code-in-rows.md](watchtower/todos/TODO-004-show-todo-code-in-rows.md) | - | - | title-only cell |",
+    "| 4 | Show task code in rows | A | TODO | [watchtower/tasks/TASK-004-show-task-code-in-rows.md](watchtower/tasks/TASK-004-show-task-code-in-rows.md) | - | - | title-only cell |",
   ].join("\n");
   const plan = parsePlanContent(content, "/ws/watchtower/NEXT.md");
-  assert.equal(plan.todos[0].id, "TODO-004");
-  assert.equal(plan.todos[0].title, "Show TODO code in rows");
-  assert.equal(plan.todos[0].specPath, "/ws/watchtower/todos/TODO-004-show-todo-code-in-rows.md");
+  assert.equal(plan.tasks[0].id, "TASK-004");
+  assert.equal(plan.tasks[0].title, "Show task code in rows");
+  assert.equal(plan.tasks[0].specPath, "/ws/watchtower/tasks/TASK-004-show-task-code-in-rows.md");
 });
 
-test("parsePlanContent falls back to padded order when TODO cell and Spec lack id", () => {
+test("parsePlanContent falls back to padded order when TASK cell and Spec lack id", () => {
   const content = [
     "# NEXT",
     "",
@@ -153,20 +153,20 @@ test("parsePlanContent falls back to padded order when TODO cell and Spec lack i
     "",
     "## Tracker",
     "",
-    "| Order | TODO | Group | Status | Spec | Deps | Context | Notes |",
+    "| Order | TASK | Group | Status | Spec | Deps | Context | Notes |",
     "|-------|------|-------|--------|------|------|---------|-------|",
-    "| 5 | Row title | A | TODO | watchtower/todos/row-title.md | - | - | no code |",
+    "| 5 | Row title | A | TODO | watchtower/tasks/row-title.md | - | - | no code |",
   ].join("\n");
   const plan = parsePlanContent(content, "/ws/watchtower/NEXT.md");
-  assert.equal(plan.todos[0].id, "TODO-005");
-  assert.equal(plan.todos[0].title, "Row title");
+  assert.equal(plan.tasks[0].id, "TASK-005");
+  assert.equal(plan.tasks[0].title, "Row title");
 });
 
-test("parsePlanContent resolves existing outcome files beside TODO specs", () => {
+test("parsePlanContent resolves existing outcome files beside TASK specs", () => {
   const root = mkdtempSync(join(tmpdir(), "watchtower-parser-"));
-  const todosDir = join(root, "watchtower", "todos");
-  mkdirSync(todosDir, { recursive: true });
-  writeFileSync(join(todosDir, "TODO-001-outcome.md"), "# Outcome\n");
+  const tasksDir = join(root, "watchtower", "tasks");
+  mkdirSync(tasksDir, { recursive: true });
+  writeFileSync(join(tasksDir, "TASK-001-outcome.md"), "# Outcome\n");
 
   const content = [
     "# NEXT",
@@ -180,19 +180,47 @@ test("parsePlanContent resolves existing outcome files beside TODO specs", () =>
     "",
     "## Tracker",
     "",
-    "| Order | TODO | Group | Status | Spec | Deps | Context | Notes |",
+    "| Order | TASK | Group | Status | Spec | Deps | Context | Notes |",
     "|-------|------|-------|--------|------|------|---------|-------|",
-    "| 1 | TODO-001 Foo | A | DONE | watchtower/todos/TODO-001-foo.md | - | - | done |",
+    "| 1 | TASK-001 Foo | A | DONE | watchtower/tasks/TASK-001-foo.md | - | - | done |",
   ].join("\n");
 
   const plan = parsePlanContent(content, join(root, "watchtower", "NEXT.md"));
-  assert.equal(plan.todos[0].outcomePath, join(todosDir, "TODO-001-outcome.md"));
+  assert.equal(plan.tasks[0].outcomePath, join(tasksDir, "TASK-001-outcome.md"));
 });
 
-test("parsePlanContent returns no todos when Tracker section is absent", () => {
+test("parsePlanContent returns no tasks when Tracker section is absent", () => {
   const content = "# NEXT\n\n## Current Active Plan\n\nTitle: Empty\nStatus: ACTIVE\n\n## Handoff\n\n- none\n";
   const plan = parsePlanContent(content, "/ws/watchtower/NEXT.md");
   assert.equal(plan.title, "Empty");
   assert.equal(plan.totalCount, 0);
-  assert.deepEqual(plan.todos, []);
+  assert.deepEqual(plan.tasks, []);
+});
+
+test("parsePlanContent still parses legacy TODO plans (back-compat)", () => {
+  const root = mkdtempSync(join(tmpdir(), "watchtower-legacy-"));
+  const todosDir = join(root, "watchtower", "todos");
+  mkdirSync(todosDir, { recursive: true });
+
+  const content = [
+    "# NEXT",
+    "",
+    "## Current Active Plan",
+    "",
+    "- Title: Legacy",
+    "- Slug: 20260101-legacy",
+    "- Status: ACTIVE",
+    "- Updated: 2026-01-01",
+    "",
+    "## Tracker",
+    "",
+    "| Order | TODO | Group | Status | Spec | Deps | Context | Notes |",
+    "|-------|------|-------|--------|------|------|---------|-------|",
+    "| 1 | TODO-001 Foo | A | TODO | watchtower/todos/TODO-001-foo.md | - | - | legacy |",
+  ].join("\n");
+
+  const plan = parsePlanContent(content, join(root, "watchtower", "NEXT.md"));
+  assert.equal(plan.totalCount, 1);
+  assert.equal(plan.tasks[0].id, "TODO-001");
+  assert.equal(plan.tasks[0].specPath, join(todosDir, "TODO-001-foo.md"));
 });

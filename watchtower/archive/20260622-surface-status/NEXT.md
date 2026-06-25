@@ -11,12 +11,12 @@
 
 One row per TODO. Group ties items that ship as one transaction.
 
-| Order | TODO | Group | Status | Spec | Deps | Context | Notes |
+| Order | TASK | Group | Status | Spec | Deps | Context | Notes |
 |-------|------|-------|--------|------|------|---------|-------|
-| 1 | TODO-001 Status mapping module | standalone | DONE | [watchtower/todos/TODO-001-status-mapping-module.md](watchtower/todos/TODO-001-status-mapping-module.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Pure src/status.ts. Foundation for rest. compile+test pass. |
-| 2 | TODO-002 Tree status icons | standalone | DONE | [watchtower/todos/TODO-002-tree-status-icons.md](watchtower/todos/TODO-002-tree-status-icons.md) | TODO-001 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Icon+color+description per TODO node. compile pass; F5 GUI manual. |
-| 3 | TODO-003 Progress surfaces | ext | DONE | [watchtower/todos/TODO-003-progress-surfaces.md](watchtower/todos/TODO-003-progress-surfaces.md) | TODO-001 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | createTreeView, title count, badge, status bar. compile pass; F5 GUI manual. |
-| 4 | TODO-004 Blocked notifications | ext | DONE | [watchtower/todos/TODO-004-blocked-notifications.md](watchtower/todos/TODO-004-blocked-notifications.md) | TODO-003 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Snapshot diff toast. Same file as TODO-003. compile pass; F5 GUI manual. |
+| 1 | TASK-001 Status mapping module | standalone | DONE | [watchtower/tasks/TASK-001-status-mapping-module.md](watchtower/tasks/TASK-001-status-mapping-module.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Pure src/status.ts. Foundation for rest. compile+test pass. |
+| 2 | TASK-002 Tree status icons | standalone | DONE | [watchtower/tasks/TASK-002-tree-status-icons.md](watchtower/tasks/TASK-002-tree-status-icons.md) | TASK-001 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Icon+color+description per TODO node. compile pass; F5 GUI manual. |
+| 3 | TASK-003 Progress surfaces | ext | DONE | [watchtower/tasks/TASK-003-progress-surfaces.md](watchtower/tasks/TASK-003-progress-surfaces.md) | TASK-001 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | createTreeView, title count, badge, status bar. compile pass; F5 GUI manual. |
+| 4 | TASK-004 Blocked notifications | ext | DONE | [watchtower/tasks/TASK-004-blocked-notifications.md](watchtower/tasks/TASK-004-blocked-notifications.md) | TASK-003 | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Snapshot diff toast. Same file as TASK-003. compile pass; F5 GUI manual. |
 
 TODO Status labels: TODO, IN PROGRESS, BLOCKED, DONE.
 Plan-level Status header: ACTIVE while any row open, DONE when all rows DONE, ARCHIVED after archive.

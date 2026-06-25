@@ -1,15 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { type ArchivePlan, type Plan, type Todo, type TodoStatus } from "../src/model.ts";
+import { type ArchivePlan, type Plan, type Task, type TaskStatus } from "../src/model.ts";
 import { renderDashboardHtml, type DashboardData } from "../src/dashboardHtml.ts";
 
-function makeTodo(
+function makeTask(
   id: string,
   order: number,
-  status: TodoStatus,
+  status: TaskStatus,
   specPath: string | null = null,
   title = "",
-): Todo {
+): Task {
   return {
     order,
     id,
@@ -23,16 +23,16 @@ function makeTodo(
   };
 }
 
-function makePlan(todos: Todo[], overrides: Partial<Plan> = {}): Plan {
+function makePlan(tasks: Task[], overrides: Partial<Plan> = {}): Plan {
   return {
     title: "Gacha Size Quiz",
     slug: "20260620-gacha-size-quiz",
     status: "ACTIVE",
     updated: "2026-06-21",
     manifestPath: "/ws/watchtower/NEXT.md",
-    todos,
-    doneCount: todos.filter((t) => t.status === "DONE").length,
-    totalCount: todos.length,
+    tasks,
+    doneCount: tasks.filter((t) => t.status === "DONE").length,
+    totalCount: tasks.length,
     ...overrides,
   };
 }
@@ -46,31 +46,31 @@ function data(
   return { plan, archive, nextPath, contextPath };
 }
 
-test("normal plan renders title, counts, and one row per todo", () => {
+test("normal plan renders title, counts, and one row per task", () => {
   const plan = makePlan([
-    makeTodo("TODO-001", 1, "DONE", "/ws/watchtower/todos/TODO-001-shell.md", "shell"),
-    makeTodo("TODO-002", 2, "IN_PROGRESS", "/ws/watchtower/todos/TODO-002-quiz.md", "quiz logic"),
-    makeTodo("TODO-003", 3, "BLOCKED", "/ws/watchtower/todos/TODO-003-api.md", "api endpoint"),
-    makeTodo("TODO-004", 4, "TODO", null, "scoring"),
-    makeTodo("TODO-005", 5, "TODO", null, "polish"),
+    makeTask("TASK-001", 1, "DONE", "/ws/watchtower/tasks/TASK-001-shell.md", "shell"),
+    makeTask("TASK-002", 2, "IN_PROGRESS", "/ws/watchtower/tasks/TASK-002-quiz.md", "quiz logic"),
+    makeTask("TASK-003", 3, "BLOCKED", "/ws/watchtower/tasks/TASK-003-api.md", "api endpoint"),
+    makeTask("TASK-004", 4, "TODO", null, "scoring"),
+    makeTask("TASK-005", 5, "TODO", null, "polish"),
   ]);
   const html = renderDashboardHtml(data(plan));
 
   assert.match(html, /Gacha Size Quiz/);
   assert.match(html, /1 of 5 done/);
   assert.match(html, /20%/);
-  for (const id of ["TODO-001", "TODO-002", "TODO-003", "TODO-004", "TODO-005"]) {
+  for (const id of ["TASK-001", "TASK-002", "TASK-003", "TASK-004", "TASK-005"]) {
     assert.ok(html.includes(id), `expected ${id} in html`);
   }
 });
 
 test("stats show done, active, blocked counts", () => {
   const plan = makePlan([
-    makeTodo("TODO-001", 1, "DONE"),
-    makeTodo("TODO-002", 2, "DONE"),
-    makeTodo("TODO-003", 3, "IN_PROGRESS"),
-    makeTodo("TODO-004", 4, "BLOCKED"),
-    makeTodo("TODO-005", 5, "TODO"),
+    makeTask("TASK-001", 1, "DONE"),
+    makeTask("TASK-002", 2, "DONE"),
+    makeTask("TASK-003", 3, "IN_PROGRESS"),
+    makeTask("TASK-004", 4, "BLOCKED"),
+    makeTask("TASK-005", 5, "TODO"),
   ]);
   const html = renderDashboardHtml(data(plan));
   assert.match(html, /<b class="st-done">2<\/b>/);
@@ -80,10 +80,10 @@ test("stats show done, active, blocked counts", () => {
 
 test("sections render in ACTIVE, BLOCKED, TODO, DONE order", () => {
   const plan = makePlan([
-    makeTodo("TODO-004", 4, "TODO"),
-    makeTodo("TODO-001", 1, "DONE"),
-    makeTodo("TODO-003", 3, "BLOCKED"),
-    makeTodo("TODO-002", 2, "IN_PROGRESS"),
+    makeTask("TASK-004", 4, "TODO"),
+    makeTask("TASK-001", 1, "DONE"),
+    makeTask("TASK-003", 3, "BLOCKED"),
+    makeTask("TASK-002", 2, "IN_PROGRESS"),
   ]);
   const html = renderDashboardHtml(data(plan));
   const active = html.indexOf('<span class="sec-label">Active</span>');
@@ -97,16 +97,16 @@ test("sections render in ACTIVE, BLOCKED, TODO, DONE order", () => {
 });
 
 test("empty sections are omitted", () => {
-  const plan = makePlan([makeTodo("TODO-001", 1, "DONE")]);
+  const plan = makePlan([makeTask("TASK-001", 1, "DONE")]);
   const html = renderDashboardHtml(data(plan));
   assert.ok(!html.includes('<span class="sec-label">Blocked</span>'), "no blocked section when none blocked");
   assert.ok(html.includes('<span class="sec-label">Done</span>'), "done section present");
 });
 
-test("plan with zero todos shows No TODOs yet and 0%", () => {
+test("plan with zero tasks shows No tasks yet and 0%", () => {
   const plan = makePlan([], { doneCount: 0, totalCount: 0 });
   const html = renderDashboardHtml(data(plan));
-  assert.match(html, /No TODOs yet/);
+  assert.match(html, /No tasks yet/);
   assert.match(html, /0%/);
   assert.match(html, /class="progress state-open"/);
   assert.match(html, /class="bar-fill" style="width:0%"/);
@@ -114,9 +114,9 @@ test("plan with zero todos shows No TODOs yet and 0%", () => {
 });
 
 test("progress state color follows open, blocked, and done state", () => {
-  const open = renderDashboardHtml(data(makePlan([makeTodo("TODO-001", 1, "TODO")])));
-  const blocked = renderDashboardHtml(data(makePlan([makeTodo("TODO-001", 1, "BLOCKED")])));
-  const done = renderDashboardHtml(data(makePlan([makeTodo("TODO-001", 1, "DONE")])));
+  const open = renderDashboardHtml(data(makePlan([makeTask("TASK-001", 1, "TODO")])));
+  const blocked = renderDashboardHtml(data(makePlan([makeTask("TASK-001", 1, "BLOCKED")])));
+  const done = renderDashboardHtml(data(makePlan([makeTask("TASK-001", 1, "DONE")])));
 
   assert.match(open, /class="progress state-open"/);
   assert.match(blocked, /class="progress state-blocked"/);
@@ -153,41 +153,41 @@ test("archive section lists slugs", () => {
   assert.match(html, /20260602-b/);
 });
 
-test("spec paths are wired as data-path on todo rows", () => {
+test("spec paths are wired as data-path on task rows", () => {
   const plan = makePlan([
-    makeTodo("TODO-002", 2, "IN_PROGRESS", "/ws/watchtower/todos/TODO-002-quiz.md", "quiz"),
+    makeTask("TASK-002", 2, "IN_PROGRESS", "/ws/watchtower/tasks/TASK-002-quiz.md", "quiz"),
   ]);
   const html = renderDashboardHtml(data(plan));
-  assert.match(html, /data-action="open" data-path="\/ws\/watchtower\/todos\/TODO-002-quiz\.md"/);
+  assert.match(html, /data-action="open" data-path="\/ws\/watchtower\/tasks\/TASK-002-quiz\.md"/);
 });
 
-test("todo rows expose row menu implement copy commands", () => {
+test("task rows expose row menu implement copy commands", () => {
   const plan = makePlan([
-    makeTodo("TODO-002", 2, "IN_PROGRESS", "/ws/watchtower/todos/TODO-002-quiz.md", "quiz"),
+    makeTask("TASK-002", 2, "IN_PROGRESS", "/ws/watchtower/tasks/TASK-002-quiz.md", "quiz"),
   ]);
   const html = renderDashboardHtml(data(plan));
   assert.match(html, /class="row-menu"/);
-  assert.match(html, /data-text="\$watchtower implement TODO-002\n"/);
-  assert.match(html, /data-text="\/watchtower implement TODO-002\n"/);
-  assert.match(html, /title="Copy \$watchtower implement TODO-002"/);
+  assert.match(html, /data-text="\$watchtower implement TASK-002\n"/);
+  assert.match(html, /data-text="\/watchtower implement TASK-002\n"/);
+  assert.match(html, /title="Copy \$watchtower implement TASK-002"/);
 });
 
-test("todo row renders canonical id and readable title", () => {
+test("task row renders canonical id and readable title", () => {
   const plan = makePlan([
-    makeTodo("TODO-007", 7, "TODO", "/ws/watchtower/todos/TODO-007-title-only.md", "Title only tracker cell"),
+    makeTask("TASK-007", 7, "TODO", "/ws/watchtower/tasks/TASK-007-title-only.md", "Title only tracker cell"),
   ]);
   const html = renderDashboardHtml(data(plan));
-  assert.match(html, /<span class="id">TODO-007<\/span>/);
+  assert.match(html, /<span class="id">TASK-007<\/span>/);
   assert.match(html, /<span class="ttl">Title only tracker cell<\/span>/);
 });
 
-test("todo row implement copy commands escape todo ids", () => {
+test("task row implement copy commands escape task ids", () => {
   const plan = makePlan([
-    makeTodo('TODO-006" onclick="x', 6, "TODO", null, "quoted"),
+    makeTask('TASK-006" onclick="x', 6, "TODO", null, "quoted"),
   ]);
   const html = renderDashboardHtml(data(plan));
-  assert.ok(!html.includes('data-text="$watchtower implement TODO-006" onclick="x'));
-  assert.match(html, /data-text="\$watchtower implement TODO-006&quot; onclick=&quot;x\n"/);
+  assert.ok(!html.includes('data-text="$watchtower implement TASK-006" onclick="x'));
+  assert.match(html, /data-text="\$watchtower implement TASK-006&quot; onclick=&quot;x\n"/);
 });
 
 test("archive rows use openArchive action with manifest path", () => {
@@ -199,7 +199,7 @@ test("archive rows use openArchive action with manifest path", () => {
 });
 
 test("file actions open NEXT and CONTEXT when both files exist", () => {
-  const html = renderDashboardHtml(data(makePlan([makeTodo("TODO-001", 1, "TODO")])));
+  const html = renderDashboardHtml(data(makePlan([makeTask("TASK-001", 1, "TODO")])));
   assert.match(html, /class="file-actions"/);
   assert.match(html, /data-action="openNext" data-path="\/ws\/watchtower\/NEXT\.md"/);
   assert.match(html, /data-action="open" data-path="\/ws\/watchtower\/CONTEXT\.md"/);
@@ -211,15 +211,15 @@ test("file actions open NEXT and CONTEXT when both files exist", () => {
   assert.match(html, /Archive/);
 });
 
-test("blocked note shows blocked todo ids", () => {
+test("blocked note shows blocked task ids", () => {
   const plan = makePlan([
-    makeTodo("TODO-001", 1, "TODO"),
-    makeTodo("TODO-002", 2, "BLOCKED"),
-    makeTodo("TODO-003", 3, "BLOCKED"),
+    makeTask("TASK-001", 1, "TODO"),
+    makeTask("TASK-002", 2, "BLOCKED"),
+    makeTask("TASK-003", 3, "BLOCKED"),
   ]);
   const html = renderDashboardHtml(data(plan));
   assert.match(html, /class="blocked-note"/);
-  assert.match(html, /TODO-002, TODO-003 needs attention\./);
+  assert.match(html, /TASK-002, TASK-003 needs attention\./);
 });
 
 test("html in title and slug is escaped", () => {
@@ -234,7 +234,7 @@ test("html in title and slug is escaped", () => {
 });
 
 test("copy buttons carry Codex and Claude watchtower commands", () => {
-  const html = renderDashboardHtml(data(makePlan([makeTodo("TODO-001", 1, "TODO")])));
+  const html = renderDashboardHtml(data(makePlan([makeTask("TASK-001", 1, "TODO")])));
   assert.match(html, /\$watchtower/);
   assert.match(html, /\/watchtower/);
   assert.match(html, /Codex/);

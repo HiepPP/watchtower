@@ -12,8 +12,8 @@
 ## Decisions
 
 - Keep scope to extension UI copy action only.
-- Copy Codex command text as `$watchtower implement TODO-NNN\n`.
-- If row menu also exposes Claude action, copy `/watchtower implement TODO-NNN\n`.
+- Copy Codex command text as `$watchtower implement TASK-NNN\n`.
+- If row menu also exposes Claude action, copy `/watchtower implement TASK-NNN\n`.
 
 ## Open Decisions
 

@@ -15,7 +15,7 @@
 - Keep both command syntaxes: `$watchtower` for Codex, `/watchtower` for Claude.
 - Add `research` to copied commands for both agents.
 - Drag uses text payload. Terminal/editor should receive same command text as copy.
-- Row id display should prefer canonical `TODO-NNN`, never free-form title text.
+- Row id display should prefer canonical `TASK-NNN`, never free-form title text.
 
 ## Open Decisions
 

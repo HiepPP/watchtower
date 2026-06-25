@@ -1,4 +1,4 @@
-import { type ArchivePlan, type Plan, type Todo, type TodoStatus } from "./model.ts";
+import { type ArchivePlan, type Plan, type Task, type TaskStatus } from "./model.ts";
 
 export interface DashboardData {
   plan: Plan | null;
@@ -10,7 +10,7 @@ export interface DashboardData {
 type CommandMode = "codex" | "claude";
 
 const COMMANDS = [
-  { label: "new", action: "add new todo", suffix: " " },
+  { label: "new", action: "add new task", suffix: " " },
   { label: "implement", action: "implement all", suffix: " "  },
   { label: "implement subagents", action: "implement with fan out subagents", suffix: " "  },
   { label: "research", action: "research", suffix: " "  },
@@ -25,7 +25,7 @@ const EMPTY_COMMANDS = [
   { label: "research", action: "research" },
 ];
 
-const STATUS_SECTION_ORDER: { status: TodoStatus; label: string }[] = [
+const STATUS_SECTION_ORDER: { status: TaskStatus; label: string }[] = [
   { status: "IN_PROGRESS", label: "Active" },
   { status: "BLOCKED", label: "Blocked" },
   { status: "TODO", label: "Todo" },
@@ -41,21 +41,21 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function statusClass(status: TodoStatus): string {
+function statusClass(status: TaskStatus): string {
   return `st-${status.toLowerCase()}`;
 }
 
-// Bucket todos by status. UNKNOWN folds into the TODO bucket so the four
-// display sections (Active/Blocked/Todo/Done) always cover every todo.
-function bucketTodos(todos: Todo[]): Record<TodoStatus, Todo[]> {
-  const buckets: Record<TodoStatus, Todo[]> = {
+// Bucket tasks by status. UNKNOWN folds into the TODO bucket so the four
+// display sections (Active/Blocked/Todo/Done) always cover every task.
+function bucketTasks(tasks: Task[]): Record<TaskStatus, Task[]> {
+  const buckets: Record<TaskStatus, Task[]> = {
     TODO: [],
     IN_PROGRESS: [],
     BLOCKED: [],
     DONE: [],
     UNKNOWN: [],
   };
-  for (const t of todos) {
+  for (const t of tasks) {
     const key = buckets[t.status] ? t.status : "UNKNOWN";
     buckets[key].push(t);
   }
@@ -70,31 +70,31 @@ function percent(done: number, total: number): number {
 
 function progressState(plan: Plan): "done" | "blocked" | "open" {
   if (plan.totalCount > 0 && plan.doneCount === plan.totalCount) return "done";
-  if (plan.todos.some((todo) => todo.status === "BLOCKED")) return "blocked";
+  if (plan.tasks.some((task) => task.status === "BLOCKED")) return "blocked";
   return "open";
 }
 
-function todoRow(todo: Todo): string {
-  const title = todo.title || todo.id;
-  const statusLabel = todo.status === "IN_PROGRESS" ? "Active" : todo.status.toLowerCase().replace("_", " ");
-  const codexCommand = `$watchtower implement ${todo.id}\n`;
-  const claudeCommand = `/watchtower implement ${todo.id}\n`;
+function taskRow(task: Task): string {
+  const title = task.title || task.id;
+  const statusLabel = task.status === "IN_PROGRESS" ? "Active" : task.status.toLowerCase().replace("_", " ");
+  const codexCommand = `$watchtower implement ${task.id}\n`;
+  const claudeCommand = `/watchtower implement ${task.id}\n`;
   const rowMenu =
     `<details class="row-menu">` +
-    `<summary class="row-menu-toggle" aria-label="${escapeHtml(`${todo.id} actions`)}" title="TODO actions">...</summary>` +
+    `<summary class="row-menu-toggle" aria-label="${escapeHtml(`${task.id} actions`)}" title="Task actions">...</summary>` +
     `<div class="row-menu-popover">` +
     `<button class="row-menu-item" type="button" data-action="copy" data-text="${escapeHtml(codexCommand)}" title="Copy ${escapeHtml(codexCommand.trim())}">Codex</button>` +
     `<button class="row-menu-item" type="button" data-action="copy" data-text="${escapeHtml(claudeCommand)}" title="Copy ${escapeHtml(claudeCommand.trim())}">Claude</button>` +
     `</div>` +
     `</details>`;
   const rowInner =
-    `<span class="id">${escapeHtml(todo.id)}</span>` +
+    `<span class="id">${escapeHtml(task.id)}</span>` +
     `<span class="ttl">${escapeHtml(title)}</span>` +
-    `<span class="row-status ${statusClass(todo.status)}">${escapeHtml(statusLabel)}</span>` +
+    `<span class="row-status ${statusClass(task.status)}">${escapeHtml(statusLabel)}</span>` +
     rowMenu;
-  if (todo.specPath) {
+  if (task.specPath) {
     return (
-      `<div class="row" data-action="open" data-path="${escapeHtml(todo.specPath)}" tabindex="0" role="button">` +
+      `<div class="row" data-action="open" data-path="${escapeHtml(task.specPath)}" tabindex="0" role="button">` +
       rowInner +
       `</div>`
     );
@@ -106,17 +106,17 @@ function todoRow(todo: Todo): string {
   );
 }
 
-function section(id: string, label: string, todos: Todo[], collapsed: boolean): string {
-  if (todos.length === 0) return "";
-  const sorted = [...todos].sort((a, b) => a.order - b.order);
+function section(id: string, label: string, tasks: Task[], collapsed: boolean): string {
+  if (tasks.length === 0) return "";
+  const sorted = [...tasks].sort((a, b) => a.order - b.order);
   return (
     `<div class="section${collapsed ? " collapsed" : ""}" data-section-id="${escapeHtml(id)}">` +
     `<button class="sec-head" type="button" aria-expanded="${!collapsed}">` +
     `<svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>` +
     `<span class="sec-label">${escapeHtml(label)}</span>` +
-    `<span class="sec-count">${todos.length}</span>` +
+    `<span class="sec-count">${tasks.length}</span>` +
     `</button>` +
-    `<div class="sec-body">${sorted.map(todoRow).join("")}</div>` +
+    `<div class="sec-body">${sorted.map(taskRow).join("")}</div>` +
     `</div>`
   );
 }
@@ -145,12 +145,12 @@ function archiveSection(archive: ArchivePlan[]): string {
   );
 }
 
-function blockedNote(todos: Todo[]): string {
-  const blocked = todos
-    .filter((todo) => todo.status === "BLOCKED")
+function blockedNote(tasks: Task[]): string {
+  const blocked = tasks
+    .filter((task) => task.status === "BLOCKED")
     .sort((a, b) => a.order - b.order);
   if (blocked.length === 0) return "";
-  const preview = blocked.slice(0, 3).map((todo) => todo.id).join(", ");
+  const preview = blocked.slice(0, 3).map((task) => task.id).join(", ");
   const suffix = blocked.length > 3 ? ` +${blocked.length - 3} more` : "";
   return (
     `<div class="blocked-note" role="status">` +
@@ -221,7 +221,7 @@ export function renderDashboardHtml(data: DashboardData): string {
   const total = plan.totalCount;
   const done = plan.doneCount;
   const pct = percent(done, total);
-  const buckets = bucketTodos(plan.todos);
+  const buckets = bucketTasks(plan.tasks);
 
   const sections = STATUS_SECTION_ORDER.map((s) =>
     section(s.status.toLowerCase(), s.label, buckets[s.status], s.status === "DONE"),
@@ -230,7 +230,7 @@ export function renderDashboardHtml(data: DashboardData): string {
   const progressClass = `progress state-${progressState(plan)}`;
 
   const ringLabel =
-    total === 0 ? `No TODOs yet` : `${done} of ${total} done`;
+    total === 0 ? `No tasks yet` : `${done} of ${total} done`;
 
   const planCardAttrs = nextPath
     ? ` data-action="openNext" data-path="${escapeHtml(nextPath)}" tabindex="0" role="button"`
@@ -259,7 +259,7 @@ export function renderDashboardHtml(data: DashboardData): string {
     `<div class="stat"><small>Active</small><b class="st-in_progress">${buckets.IN_PROGRESS.length}</b></div>` +
     `<div class="stat"><small>Blocked</small><b class="st-blocked">${buckets.BLOCKED.length}</b></div>` +
     `</div>` +
-    blockedNote(plan.todos) +
+    blockedNote(plan.tasks) +
     fileActions(nextPath, contextPath) +
     `<div class="command-bar" aria-label="Watchtower commands">` +
     commandGroup("codex") +

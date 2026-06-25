@@ -9,9 +9,9 @@
 
 ## Tracker
 
-| Order | TODO | Group | Status | Spec | Deps | Context | Notes |
+| Order | TASK | Group | Status | Spec | Deps | Context | Notes |
 |-------|------|-------|--------|------|------|---------|-------|
-| 1 | TODO-001 Add row implement copy menu | standalone | DONE | [watchtower/todos/TODO-001-add-row-implement-copy-menu.md](watchtower/todos/TODO-001-add-row-implement-copy-menu.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Done. Row menu copies TODO-specific implement command. |
+| 1 | TASK-001 Add row implement copy menu | standalone | DONE | [watchtower/tasks/TASK-001-add-row-implement-copy-menu.md](watchtower/tasks/TASK-001-add-row-implement-copy-menu.md) | - | [watchtower/CONTEXT.md](watchtower/CONTEXT.md) | Done. Row menu copies TASK-specific implement command. |
 
 ## Plan Verify
 

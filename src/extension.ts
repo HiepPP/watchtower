@@ -2,16 +2,16 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { WatchtowerDashboardProvider } from "./dashboardProvider.ts";
-import { type TodoStatus } from "./model.ts";
+import { type TaskStatus } from "./model.ts";
 import { readPlan } from "./parser.ts";
 import { summarize, detectNewlyBlocked } from "./status.ts";
 
 const PLAN_DIR = "watchtower";
 const PLAN_FILE = "NEXT.md";
 
-// Snapshot of last-seen status per TODO id. Module-level so it survives across
+// Snapshot of last-seen status per task id. Module-level so it survives across
 // updateStatus calls. Empty on first load: detectNewlyBlocked stays quiet, then seeds.
-const prevStatus = new Map<string, TodoStatus>();
+const prevStatus = new Map<string, TaskStatus>();
 
 function findRootDir(): string | undefined {
   const folders = vscode.workspace.workspaceFolders ?? [];
@@ -69,8 +69,8 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBar.tooltip = `${done} of ${total} done`;
     statusBar.show();
 
-    for (const id of detectNewlyBlocked(prevStatus, plan.todos)) {
-      const specPath = plan.todos.find((t) => t.id === id)?.specPath ?? null;
+    for (const id of detectNewlyBlocked(prevStatus, plan.tasks)) {
+      const specPath = plan.tasks.find((t) => t.id === id)?.specPath ?? null;
       void vscode.window
         .showWarningMessage(`Watchtower: ${id} is BLOCKED`, "Show")
         .then((choice) => {
@@ -79,7 +79,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }
 
     prevStatus.clear();
-    for (const t of plan.todos) prevStatus.set(t.id, t.status);
+    for (const t of plan.tasks) prevStatus.set(t.id, t.status);
   };
 
   context.subscriptions.push(

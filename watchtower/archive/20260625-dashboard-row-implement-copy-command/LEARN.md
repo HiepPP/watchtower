@@ -6,7 +6,7 @@ Discrepancy: none. Plan asked row implement copy menu. Shipped row menu copy, sp
 
 ## Per TODO
 
-- TODO-001: plan add row menu copy action, keep spec open, stop menu click open, add tests -> shipped Codex and Claude row copy actions, menu isolation, close-after-copy, styles, tests, VSIX install. Mistake: match. Fix: none.
+- TASK-001: plan add row menu copy action, keep spec open, stop menu click open, add tests -> shipped Codex and Claude row copy actions, menu isolation, close-after-copy, styles, tests, VSIX install. Mistake: match. Fix: none.
 
 ## Plan-Level
 

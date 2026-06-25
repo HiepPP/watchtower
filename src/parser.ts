@@ -2,12 +2,12 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import {
   type Plan,
-  type Todo,
+  type Task,
   type ArchivePlan,
   type Section,
-  type TodoStatus,
+  type TaskStatus,
   toPlanStatus,
-  toTodoStatus,
+  toTaskStatus,
 } from "./model.ts";
 
 function headerBlock(content: string): string {
@@ -43,18 +43,32 @@ function isSeparatorRow(cells: string[]): boolean {
   return cells.every((c) => /^:?-{1,}:?$/.test(c) || c === "");
 }
 
-function resolveSpec(todosDir: string, cell: string): string | null {
+// Task spec id, e.g. TASK-001. Legacy TODO-NNN ids are still accepted so
+// pre-rename plans keep resolving until they are migrated.
+const TASK_ID = /^((?:TASK|TODO)-\d+)/;
+
+// Spec files live in a sibling `tasks/` folder; fall back to the legacy
+// `todos/` folder for plans that have not been migrated yet.
+function tasksDirFor(baseDir: string): string {
+  const tasks = path.join(baseDir, "tasks");
+  if (fs.existsSync(tasks)) return tasks;
+  const legacy = path.join(baseDir, "todos");
+  if (fs.existsSync(legacy)) return legacy;
+  return tasks;
+}
+
+function resolveSpec(tasksDir: string, cell: string): string | null {
   if (!cell || cell === "-") return null;
   const link = cell.match(/\]\(([^)]+)\)/);
   const raw = (link ? link[1] : cell).trim();
   if (!raw || raw === "-") return null;
-  return path.join(todosDir, path.basename(raw));
+  return path.join(tasksDir, path.basename(raw));
 }
 
-function resolveOutcome(todosDir: string, todoId: string, specPath: string | null): string | null {
-  if (!todoId) return null;
-  const dir = specPath ? path.dirname(specPath) : todosDir;
-  const exact = path.join(dir, `${todoId}-outcome.md`);
+function resolveOutcome(tasksDir: string, taskId: string, specPath: string | null): string | null {
+  if (!taskId) return null;
+  const dir = specPath ? path.dirname(specPath) : tasksDir;
+  const exact = path.join(dir, `${taskId}-outcome.md`);
   if (fs.existsSync(exact)) return exact;
 
   let entries: string[];
@@ -65,27 +79,28 @@ function resolveOutcome(todosDir: string, todoId: string, specPath: string | nul
   }
 
   const match = entries
-    .filter((entry) => entry.startsWith(`${todoId}-`) && entry.endsWith("-outcome.md"))
+    .filter((entry) => entry.startsWith(`${taskId}-`) && entry.endsWith("-outcome.md"))
     .sort((a, b) => a.localeCompare(b))[0];
   return match ? path.join(dir, match) : null;
 }
 
-function todoIdFromSpec(specPath: string | null): string {
+function taskIdFromSpec(specPath: string | null): string {
   if (!specPath) return "";
-  const match = path.basename(specPath).match(/^(TODO-\d+)/);
+  const match = path.basename(specPath).match(TASK_ID);
   return match ? match[1] : "";
 }
 
-function parseTracker(content: string, todosDir: string): Todo[] {
+function parseTracker(content: string, tasksDir: string): Task[] {
   const lines = trackerBlock(content).split(/\r?\n/);
   const headerIdx = lines.findIndex((l) => {
     if (!l.includes("|")) return false;
     const cells = splitRow(l).map((c) => c.toLowerCase());
-    return cells.includes("order") && cells.includes("todo") && cells.includes("status");
+    const hasItem = cells.includes("task") || cells.includes("todo");
+    return cells.includes("order") && hasItem && cells.includes("status");
   });
   if (headerIdx === -1) return [];
 
-  const todos: Todo[] = [];
+  const tasks: Task[] = [];
   for (let i = headerIdx + 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line.trim().startsWith("|")) {
@@ -96,35 +111,35 @@ function parseTracker(content: string, todosDir: string): Todo[] {
     if (isSeparatorRow(cells)) continue;
 
     // Columns are positional per the Watchtower tracker schema:
-    // [0]=Order [1]=TODO [2]=Group [3]=Status [4]=Spec [5]=Deps [6]=Context(unused) [7]=Notes
-    const [orderCell, todoCell, groupCell, statusCell, specCell, depsCell, , notesCell] = cells;
-    const idMatch = (todoCell ?? "").match(/^(TODO-\d+)\s*(.*)$/);
+    // [0]=Order [1]=TASK [2]=Group [3]=Status [4]=Spec [5]=Deps [6]=Context(unused) [7]=Notes
+    const [orderCell, taskCell, groupCell, statusCell, specCell, depsCell, , notesCell] = cells;
+    const idMatch = (taskCell ?? "").match(/^((?:TASK|TODO)-\d+)\s*(.*)$/);
     const order = Number.parseInt(orderCell ?? "", 10);
-    const specPath = resolveSpec(todosDir, specCell ?? "");
-    const fallbackId = Number.isNaN(order) ? `TODO-${String(todos.length + 1).padStart(3, "0")}` : `TODO-${String(order).padStart(3, "0")}`;
-    const id = idMatch ? idMatch[1] : todoIdFromSpec(specPath) || fallbackId;
-    const title = idMatch ? idMatch[2].trim() : (todoCell ?? "").trim();
+    const specPath = resolveSpec(tasksDir, specCell ?? "");
+    const fallbackId = Number.isNaN(order) ? `TASK-${String(tasks.length + 1).padStart(3, "0")}` : `TASK-${String(order).padStart(3, "0")}`;
+    const id = idMatch ? idMatch[1] : taskIdFromSpec(specPath) || fallbackId;
+    const title = idMatch ? idMatch[2].trim() : (taskCell ?? "").trim();
 
-    todos.push({
-      order: Number.isNaN(order) ? todos.length + 1 : order,
+    tasks.push({
+      order: Number.isNaN(order) ? tasks.length + 1 : order,
       id,
       title,
       group: (groupCell ?? "").trim(),
-      status: toTodoStatus(statusCell ?? ""),
+      status: toTaskStatus(statusCell ?? ""),
       specPath,
-      outcomePath: resolveOutcome(todosDir, id, specPath),
+      outcomePath: resolveOutcome(tasksDir, id, specPath),
       deps: (depsCell ?? "").trim(),
       notes: (notesCell ?? "").trim(),
     });
   }
-  return todos;
+  return tasks;
 }
 
 export function parsePlanContent(content: string, manifestPath: string): Plan {
   const block = headerBlock(content);
-  const todosDir = path.join(path.dirname(manifestPath), "todos");
-  const todos = parseTracker(content, todosDir);
-  const doneCount = todos.filter((t) => t.status === "DONE").length;
+  const tasksDir = tasksDirFor(path.dirname(manifestPath));
+  const tasks = parseTracker(content, tasksDir);
+  const doneCount = tasks.filter((t) => t.status === "DONE").length;
 
   return {
     title: field(block, "Title"),
@@ -132,17 +147,17 @@ export function parsePlanContent(content: string, manifestPath: string): Plan {
     status: toPlanStatus(field(block, "Status")),
     updated: field(block, "Updated"),
     manifestPath,
-    todos,
+    tasks,
     doneCount,
-    totalCount: todos.length,
+    totalCount: tasks.length,
   };
 }
 
 const SECTION_NAMES = new Set(["Brief", "Verify", "Outcome"]);
 
-export function parseTodoFile(content: string): {
+export function parseTaskFile(content: string): {
   sections: Section[];
-  outcomeStatus: TodoStatus | null;
+  outcomeStatus: TaskStatus | null;
 } {
   const lines = content.split(/\r?\n/);
   const sections: Section[] = [];
@@ -156,13 +171,13 @@ export function parseTodoFile(content: string): {
     }
   }
 
-  let outcomeStatus: TodoStatus | null = null;
+  let outcomeStatus: TaskStatus | null = null;
   if (outcomeLine !== -1) {
     for (let i = outcomeLine + 1; i < lines.length; i++) {
       if (lines[i].startsWith("## ")) break;
       const sm = lines[i].match(/^Status:\s*(.+)$/i);
       if (sm) {
-        const parsed = toTodoStatus(sm[1]);
+        const parsed = toTaskStatus(sm[1]);
         outcomeStatus = parsed === "UNKNOWN" ? null : parsed;
         break;
       }
@@ -190,13 +205,13 @@ export function readPlan(rootDir: string): Plan | null {
   return readPlanAt(path.join(rootDir, "watchtower", "NEXT.md"));
 }
 
-export function readTodoFile(specPath: string): {
+export function readTaskFile(specPath: string): {
   sections: Section[];
-  outcomeStatus: TodoStatus | null;
+  outcomeStatus: TaskStatus | null;
 } {
   const content = readFileSafe(specPath);
   if (content === null) return { sections: [], outcomeStatus: null };
-  return parseTodoFile(content);
+  return parseTaskFile(content);
 }
 
 export function listArchive(rootDir: string): ArchivePlan[] {

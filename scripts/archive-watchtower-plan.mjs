@@ -100,6 +100,8 @@ function archivePlan(rootDir) {
   fs.writeFileSync(archivedNext, archivedContent, "utf8");
 
   moveIfExists(path.join(watchtowerDir, "CONTEXT.md"), path.join(archiveDir, "CONTEXT.md"));
+  moveIfExists(path.join(watchtowerDir, "tasks"), path.join(archiveDir, "tasks"));
+  // Legacy layout: pre-rename plans kept specs under todos/.
   moveIfExists(path.join(watchtowerDir, "todos"), path.join(archiveDir, "todos"));
 
   return archiveName;

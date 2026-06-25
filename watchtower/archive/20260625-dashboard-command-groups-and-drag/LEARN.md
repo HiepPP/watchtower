@@ -6,10 +6,10 @@ Discrepancy: 1 found. Dashboard command plan shipped, with drag fallback added a
 
 ## Per TODO
 
-- TODO-001: plan add `research` to active command copy UI -> shipped active command list with `research` for Codex and Claude. Mistake: match. Fix: none.
-- TODO-002: plan group no-plan commands by Codex and Claude with `new` and `research` -> shipped grouped empty state. Mistake: match. Fix: none.
-- TODO-003: plan set drag payload from command text -> shipped drag payload plus extension fallback insert on `dragend`. Mistake: first pass trusted dataTransfer only, but VS Code drop did not paste text. Fix: send `insert` message on drag end and insert into active editor or terminal.
-- TODO-004: plan derive canonical `TODO-NNN` from Spec filename or Order -> shipped parser fallback and row title preservation. Mistake: match. Fix: none.
+- TASK-001: plan add `research` to active command copy UI -> shipped active command list with `research` for Codex and Claude. Mistake: match. Fix: none.
+- TASK-002: plan group no-plan commands by Codex and Claude with `new` and `research` -> shipped grouped empty state. Mistake: match. Fix: none.
+- TASK-003: plan set drag payload from command text -> shipped drag payload plus extension fallback insert on `dragend`. Mistake: first pass trusted dataTransfer only, but VS Code drop did not paste text. Fix: send `insert` message on drag end and insert into active editor or terminal.
+- TASK-004: plan derive canonical `TASK-NNN` from Spec filename or Order -> shipped parser fallback and row title preservation. Mistake: match. Fix: none.
 
 ## Plan-Level
 

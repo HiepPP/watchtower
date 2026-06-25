@@ -132,7 +132,7 @@ Use `--repo <path>` when your shell is not already inside the target repo:
 ```
 
 The skill keeps active work in `watchtower/NEXT.md`.
-It writes TODO details under `watchtower/todos/`.
+It writes TASK details under `watchtower/tasks/`.
 It moves finished plans into `watchtower/archive/`.
 `research` is read-only and standalone. It maps codebase questions into `watchtower/RESEARCH.md` (an index) plus per-question sidecars under `watchtower/research/`, and never writes code or edits your plan.
 
@@ -143,8 +143,8 @@ The extension reads a fixed layout inside the `watchtower/` directory.
 ```text
 watchtower/
   NEXT.md                 # active plan: header block + Tracker table
-  todos/
-    TODO-001-...md        # spec files with Brief / Verify / Outcome
+  tasks/
+    TASK-001-...md        # spec files with Brief / Verify / Outcome
   archive/
     20260620-some-slug/
       NEXT.md             # an archived plan
@@ -162,15 +162,15 @@ Updated: 2026-06-21
 
 ## Tracker
 
-| Order | TODO | Group | Status | Spec | Deps | Context | Notes |
+| Order | TASK | Group | Status | Spec | Deps | Context | Notes |
 |---|---|---|---|---|---|---|---|
-| 1 | TODO-001 Build the shell | standalone | DONE | watchtower/todos/TODO-001-build-the-shell.md | - | CONTEXT.md | Done. |
+| 1 | TASK-001 Build the shell | standalone | DONE | watchtower/tasks/TASK-001-build-the-shell.md | - | CONTEXT.md | Done. |
 ```
 
 Notes on parsing:
 
-- The Tracker header must contain the columns `Order`, `TODO`, and `Status`.
-- The Spec cell may be a plain path or a Markdown link. Only the file name is used, resolved against `watchtower/todos/`.
+- The Tracker header must contain the columns `Order`, `TASK` (legacy `TODO` also accepted), and `Status`.
+- The Spec cell may be a plain path or a Markdown link. Only the file name is used, resolved against `watchtower/tasks/` (falls back to a legacy `watchtower/todos/`).
 - A spec file may end with an `## Outcome` section that carries a `Status:` line. That status wins over the Tracker status.
 - The extension ignores any `NEXT.md` at the repo root. It reads the `watchtower/` directory only.
 

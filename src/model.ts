@@ -1,17 +1,17 @@
 export type PlanStatus = "ACTIVE" | "DONE" | "ARCHIVED" | "UNKNOWN";
-export type TodoStatus = "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "UNKNOWN";
+export type TaskStatus = "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "UNKNOWN";
 
 export interface Section {
   name: string;
   line: number;
 }
 
-export interface Todo {
+export interface Task {
   order: number;
   id: string;
   title: string;
   group: string;
-  status: TodoStatus;
+  status: TaskStatus;
   specPath: string | null;
   outcomePath: string | null;
   deps: string;
@@ -24,7 +24,7 @@ export interface Plan {
   status: PlanStatus;
   updated: string;
   manifestPath: string;
-  todos: Todo[];
+  tasks: Task[];
   doneCount: number;
   totalCount: number;
 }
@@ -34,7 +34,7 @@ export interface ArchivePlan {
   manifestPath: string;
 }
 
-export function toTodoStatus(raw: string): TodoStatus {
+export function toTaskStatus(raw: string): TaskStatus {
   const v = raw.trim().toUpperCase();
   if (v === "DONE") return "DONE";
   if (v === "IN PROGRESS" || v === "IN_PROGRESS") return "IN_PROGRESS";

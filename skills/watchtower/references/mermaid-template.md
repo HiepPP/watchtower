@@ -1,11 +1,11 @@
 # Mermaid Chart Reference
 
-Pick one chart type per TODO - the one that best shows that TODO's logic or change.
+Pick one chart type per TASK - the one that best shows that TASK's logic or change.
 Keep the chart small. Keep node and edge labels exact (real identifiers from the code).
 
 ## Flowchart - branching logic or a before/after change
 
-Before/after change (the default when a TODO changes a flow):
+Before/after change (the default when a TASK changes a flow):
 
 ```mermaid
 flowchart TB

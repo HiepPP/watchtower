@@ -47,7 +47,7 @@ Question: <full question>
 Date: <YYYY-MM-DD>
 Scope: <repo / module / symbol>
 Status: <DONE | PARTIAL>
-Related: <TODO-NNN or ->
+Related: <TASK-NNN or ->
 
 ## Summary
 
