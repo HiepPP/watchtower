@@ -401,7 +401,7 @@ body {
 
 .row {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) auto auto;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
   align-items: center;
   gap: 7px;
   min-height: 26px;
@@ -415,7 +415,11 @@ body {
 }
 
 .row.static {
-  cursor: default;
+  cursor: grab;
+}
+
+.row[draggable="true"]:active {
+  cursor: grabbing;
 }
 
 .row .id {
@@ -469,62 +473,6 @@ body {
 }
 .row-status.st-archive {
   color: var(--archive);
-}
-
-.row-menu {
-  position: relative;
-  min-width: 22px;
-  height: 22px;
-}
-
-.row-menu-toggle {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
-  color: var(--muted);
-  cursor: pointer;
-  list-style: none;
-}
-
-.row-menu-toggle::-webkit-details-marker {
-  display: none;
-}
-
-.row-menu-toggle:hover,
-.row-menu[open] .row-menu-toggle {
-  background: var(--surface-strong);
-  color: var(--vscode-foreground);
-}
-
-.row-menu-popover {
-  position: absolute;
-  right: 0;
-  z-index: 2;
-  display: grid;
-  min-width: 120px;
-  padding: 4px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--vscode-menu-background, var(--vscode-editorWidget-background));
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-}
-
-.row-menu-item {
-  width: 100%;
-  padding: 5px 7px;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--vscode-menu-foreground, var(--vscode-foreground));
-  cursor: pointer;
-  font-size: 11px;
-  text-align: left;
-}
-
-.row-menu-item:hover {
-  background: var(--vscode-menu-selectionBackground, var(--surface-strong));
 }
 
 /* Empty state */
@@ -662,8 +610,6 @@ body {
 
 /* Focus + scrollbars */
 .row[role="button"]:focus-visible,
-.row-menu-toggle:focus-visible,
-.row-menu-item:focus-visible,
 .copy-cmd:focus-visible,
 .cmd-btn:focus-visible,
 .file-btn:focus-visible,

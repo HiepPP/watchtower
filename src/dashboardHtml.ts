@@ -77,30 +77,22 @@ function progressState(plan: Plan): "done" | "blocked" | "open" {
 function taskRow(task: Task): string {
   const title = task.title || task.id;
   const statusLabel = task.status === "IN_PROGRESS" ? "Active" : task.status.toLowerCase().replace("_", " ");
-  const codexCommand = `$watchtower implement ${task.id}\n`;
-  const claudeCommand = `/watchtower implement ${task.id}\n`;
-  const rowMenu =
-    `<details class="row-menu">` +
-    `<summary class="row-menu-toggle" aria-label="${escapeHtml(`${task.id} actions`)}" title="Task actions">...</summary>` +
-    `<div class="row-menu-popover">` +
-    `<button class="row-menu-item" type="button" data-action="copy" data-text="${escapeHtml(codexCommand)}" title="Copy ${escapeHtml(codexCommand.trim())}">Codex</button>` +
-    `<button class="row-menu-item" type="button" data-action="copy" data-text="${escapeHtml(claudeCommand)}" title="Copy ${escapeHtml(claudeCommand.trim())}">Claude</button>` +
-    `</div>` +
-    `</details>`;
+  // Dragging a task drops the implement command for that task into the editor/terminal.
+  const dragText = `watchtower implement ${task.id}`;
+  const dragAttrs = `draggable="true" data-drag-text="${escapeHtml(dragText)}"`;
   const rowInner =
     `<span class="id">${escapeHtml(task.id)}</span>` +
     `<span class="ttl">${escapeHtml(title)}</span>` +
-    `<span class="row-status ${statusClass(task.status)}">${escapeHtml(statusLabel)}</span>` +
-    rowMenu;
+    `<span class="row-status ${statusClass(task.status)}">${escapeHtml(statusLabel)}</span>`;
   if (task.specPath) {
     return (
-      `<div class="row" data-action="open" data-path="${escapeHtml(task.specPath)}" tabindex="0" role="button">` +
+      `<div class="row" data-action="open" data-path="${escapeHtml(task.specPath)}" ${dragAttrs} tabindex="0" role="button">` +
       rowInner +
       `</div>`
     );
   }
   return (
-    `<div class="row static">` +
+    `<div class="row static" ${dragAttrs}>` +
     rowInner +
     `</div>`
   );

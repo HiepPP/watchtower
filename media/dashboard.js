@@ -103,9 +103,10 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("dragstart", (e) => {
-  const el = e.target.closest('[draggable="true"][data-text]');
+  const el = e.target.closest('[draggable="true"]');
   if (!el || !e.dataTransfer) return;
   const text = el.dataset.dragText || el.dataset.text || "";
+  if (!text) return;
   draggedCommandText = text;
   e.dataTransfer.setData("text/plain", text);
   e.dataTransfer.setData("text", text);
