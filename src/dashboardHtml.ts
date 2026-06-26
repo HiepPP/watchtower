@@ -7,8 +7,6 @@ export interface DashboardData {
   contextPath: string;
 }
 
-type CommandMode = "codex" | "claude";
-
 const COMMANDS = [
   { label: "new", action: "add new task", suffix: " " },
   { label: "implement", action: "implement all", suffix: " "  },
@@ -152,39 +150,29 @@ function blockedNote(tasks: Task[]): string {
   );
 }
 
-function commandPrefix(mode: CommandMode): "$watchtower" | "/watchtower" {
-  return mode === "codex" ? "$watchtower" : "/watchtower";
-}
-
-function commandModeLabel(mode: CommandMode): "Codex" | "Claude" {
-  return mode === "codex" ? "Codex" : "Claude";
-}
-
-function commandButtons(mode: CommandMode): string {
-  const prefix = 'watchtower';
+function commandButtons(): string {
   return COMMANDS.map(
     (cmd) => {
-      const command = `${prefix} ${cmd.action}${cmd.suffix ?? ""}`;
+      const command = `watchtower ${cmd.action}${cmd.suffix ?? ""}`;
       // Copy the command with a trailing newline so it runs on paste.
       const copyText = `${command}\n`;
       return (
         `<button class="cmd-btn" data-action="copy" data-text="${escapeHtml(copyText)}" data-drag-text="${escapeHtml(command)}" draggable="true" title="Copy ${escapeHtml(command)}">` +
-      `${escapeHtml(cmd.label)}` +
+        `${escapeHtml(cmd.label)}` +
         `</button>`
       );
     },
   ).join("");
 }
 
-function commandGroup(mode: CommandMode): string {
+function commandGroup(): string {
   return (
     `<div class="cmd-group">` +
     `<div class="cmd-agent">` +
-    `<span class="cmd-prefix">${commandPrefix(mode)}</span>` +
-    `<span class="cmd-mode">${commandModeLabel(mode)}</span>` +
+    `<span class="cmd-prefix">watchtower</span>` +
     `</div>` +
     `<div class="cmd-actions">` +
-    commandButtons(mode) +
+    commandButtons() +
     `</div>` +
     `</div>`
   );
@@ -254,8 +242,7 @@ export function renderDashboardHtml(data: DashboardData): string {
     blockedNote(plan.tasks) +
     fileActions(nextPath, contextPath) +
     `<div class="command-bar" aria-label="Watchtower commands">` +
-    commandGroup("codex") +
-    commandGroup("claude") +
+    commandGroup() +
     `</div>` +
     `<div class="list">${sections}${archiveSection(archive)}</div>` +
     `<div class="toast" id="toast" hidden>Copied</div>`
@@ -268,33 +255,25 @@ function emptyState(nextPath: string): string {
     `<rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/>` +
     `<path d="M3.5 10.5h-1A1.5 1.5 0 0 1 1 9V2.5A1.5 1.5 0 0 1 2.5 1H9a1.5 1.5 0 0 1 1.5 1.5v1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` +
     `</svg>`;
-  const copyButtons = (["codex", "claude"] as CommandMode[])
-    .map((mode) => {
-      const prefix = commandPrefix(mode);
-      const modeLabel = commandModeLabel(mode);
-      const buttons = EMPTY_COMMANDS.map((cmd) => {
-        const label = `${prefix} ${cmd.action}`;
-        const copyText = `${label}\n`;
-        return (
-          `<button class="copy-cmd" data-action="copy" data-text="${escapeHtml(copyText)}" data-drag-text="${escapeHtml(label)}" draggable="true" title="Copy ${escapeHtml(label)} for ${escapeHtml(modeLabel)}">` +
-          `<span class="copy-cmd-label">` +
-          `<span class="copy-cmd-text">${escapeHtml(label)}</span>` +
-          `</span>` +
-          copyIcon +
-          `</button>`
-        );
-      }).join("");
-      return (
-        `<div class="empty-command-group">` +
-        `<div class="empty-command-head">` +
-        `<span class="copy-cmd-mode">${escapeHtml(modeLabel)}</span>` +
-        `<span class="cmd-prefix">${escapeHtml(prefix)}</span>` +
-        `</div>` +
-        buttons +
-        `</div>`
-      );
-    })
-    .join("");
+  const buttons = EMPTY_COMMANDS.map((cmd) => {
+    const label = `watchtower ${cmd.action}`;
+    const copyText = `${label}\n`;
+    return (
+      `<button class="copy-cmd" data-action="copy" data-text="${escapeHtml(copyText)}" data-drag-text="${escapeHtml(label)}" draggable="true" title="Copy ${escapeHtml(label)}">` +
+      `<span class="copy-cmd-label">` +
+      `<span class="copy-cmd-text">${escapeHtml(label)}</span>` +
+      `</span>` +
+      copyIcon +
+      `</button>`
+    );
+  }).join("");
+  const copyButtons =
+    `<div class="empty-command-group">` +
+    `<div class="empty-command-head">` +
+    `<span class="cmd-prefix">watchtower</span>` +
+    `</div>` +
+    buttons +
+    `</div>`;
   return (
     `<div class="empty">` +
     `<div class="empty-title">No active plan</div>` +

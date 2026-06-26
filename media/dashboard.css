@@ -281,11 +281,6 @@ body {
   gap: 6px;
 }
 
-.cmd-group + .cmd-group {
-  padding-top: 7px;
-  border-top: 1px solid var(--line);
-}
-
 .cmd-agent {
   display: flex;
   align-items: center;
@@ -300,17 +295,6 @@ body {
   font-family: var(--vscode-editor-font-family, monospace);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cmd-mode {
-  padding: 1px 5px;
-  border-radius: 4px;
-  color: var(--vscode-badge-foreground);
-  background: var(--vscode-badge-background);
-  font-size: 9px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -556,19 +540,6 @@ body {
   align-items: center;
   gap: 8px;
   min-width: 0;
-}
-
-.copy-cmd-mode {
-  flex: none;
-  padding: 1px 6px;
-  border-radius: 4px;
-  color: var(--vscode-badge-foreground);
-  background: var(--vscode-badge-background);
-  font-family: var(--vscode-font-family);
-  font-size: 9px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
 }
 
 .copy-cmd-text {
